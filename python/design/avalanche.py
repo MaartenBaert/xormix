@@ -5,6 +5,7 @@ import math
 import numpy
 import random
 import scipy.stats
+import sys
 
 # xormix_avalanche is a C++ module that must be compiled first
 import xormix_avalanche
@@ -21,6 +22,8 @@ def avalanche_test(n, rounds):
 	n2 = n // 2
 	mask = (1 << n2) - 1
 	distribution = scipy.stats.binom.pmf(numpy.arange(n + 1), n, 0.5)
+	distribution[0] = 0
+	distribution /= distribution.sum()
 	
 	reorder = [
 		[0, 1, 2, 3],
@@ -56,9 +59,14 @@ def avalanche_test(n, rounds):
 			count_type = numpy.uint32
 		else:
 			count_type = numpy.uint64
-		sl1 = max(1, numpy.searchsorted(distribution, min_observ / total_trials))
+		sl1 = max(1, numpy.searchsorted(distribution, min_observ / total_trials)) + 1
 		sl2 = n - sl1 + 1
 		print(f'Keeping {sl2 - sl1} out of {len(distribution)} bins')
+		grouped_distribution = numpy.concatenate((
+			distribution[: sl1, None].sum(axis=0),
+			distribution[sl1 : sl2],
+			distribution[sl2 :, None].sum(axis=0),
+		))
 		candidates_new = []
 		for (i, candidate) in enumerate(candidates):
 			print(f'Evaluating {i} / {len(candidates)} -> {len(candidates_new)}', end='\r', flush=True)
@@ -70,7 +78,12 @@ def avalanche_test(n, rounds):
 			for j in range(subtests):
 				bit = n * j // subtests
 				counts[j] += xormix_avalanche.test(n, trials, bit, candidate['shifts'], rounds, rng.getrandbits(64))
-			(r, p) = scipy.stats.chisquare(counts[:, sl1 : sl2], distribution[sl1 : sl2] * total_trials, axis=1)
+			grouped_counts = numpy.concatenate((
+				counts[:, : sl1, None].sum(axis=1),
+				counts[:, sl1 : sl2],
+				counts[:, sl2 :, None].sum(axis=1),
+			), axis=1)
+			(r, p) = scipy.stats.chisquare(grouped_counts, grouped_distribution * total_trials, axis=1)
 			pmean = 10**numpy.log10(numpy.maximum(1e-100, p)).mean()
 			if pmean > min_pvalue:
 				candidate['counts'] = counts
@@ -99,6 +112,29 @@ def avalanche_test(n, rounds):
 	print(f'Completed avalanche test for xormix{n}')
 	print(f'Best result: [{shifts[0]:2} {shifts[1]:2} {shifts[2]:2} {shifts[3]:2}] ({rounds} rounds, {total_trials} trials)')
 	print()
+	with open('avalanche-results.txt', 'a') as f:
+		f.write(f'avalanche_test({n}, {rounds}): [{shifts[0]:2} {shifts[1]:2} {shifts[2]:2} {shifts[3]:2}] ({rounds} rounds, {total_trials} trials)\n')
+
+if len(sys.argv) != 3:
+	print('Usage: avalanche.py <wordsize> <rounds>')
+	sys.exit(1)
+
+avalanche_test(int(sys.argv[1]), int(sys.argv[2]))
+
+#for rounds in [6, 7, 8]:
+	#avalanche_test(16, rounds)
+#for rounds in [6, 7, 8]:
+	#avalanche_test(24, rounds)
+#for rounds in [7, 8, 9]:
+	#avalanche_test(32, rounds)
+#for rounds in [7, 8, 9]:
+	#avalanche_test(48, rounds)
+#for rounds in [8, 9, 10]:
+	#avalanche_test(64, rounds)
+#for rounds in [8, 9, 10]:
+	#avalanche_test(96, rounds)
+#for rounds in [9, 10, 11]:
+	#avalanche_test(128, rounds)
 
 #avalanche_test(16, 8)
 # Best result: [ 1  8  5  6] (7 rounds, 20637817 trials)
