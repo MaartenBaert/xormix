@@ -210,33 +210,56 @@ struct xormix_tool {
 		if(g_option_uniform_seeds > UINT32_MAX / (g_option_streams + 1))
 			throw std::bad_alloc();
 		
-		// get original seed
+		// generate initial state
 		std::vector<word_t> state((g_option_streams + 1) * g_option_uniform_seeds);
 		if(g_option_read_seed) {
+			
+			// read seeds from stdin
 			std::vector<uint8_t> bytes(xm::WORD_BYTES * (g_option_streams + 1));
-			read_formatted(bytes.data(), 1);
-			read_formatted(bytes.data() + xm::WORD_BYTES, g_option_streams);
-			xm::unpack_words(bytes.data(), state.data(), g_option_streams + 1);
-			word_t zero = {};
-			if(xm::word_equal(state[0], zero)) {
-				std::cerr << "Warning: seed_x is zero" << std::endl;
+			for(uint64_t uniform = 0; uniform < g_option_uniform_seeds; ++uniform) {
+				read_formatted(bytes.data(), 1);
+				read_formatted(bytes.data() + xm::WORD_BYTES, g_option_streams);
+				word_t *substate = state.data() + uniform * (g_option_streams + 1);
+				xm::unpack_words(bytes.data(), substate, g_option_streams + 1);
+				word_t zero = {};
+				if(xm::word_equal(state[0], zero)) {
+					std::cerr << "Warning: seed_x is zero" << std::endl;
+				}
 			}
+			
+			// check uniform seeds
+			if(g_option_uniform_seeds != 1) {
+				word_t advance = xm::divide_period(g_option_uniform_seeds);
+				matrix_t advance_matrix = xm::matrix_power(xm::XORMIX_MATRIX, advance);
+				word_t seed_x = state[0];
+				for(uint64_t uniform = 1; uniform < g_option_uniform_seeds; ++uniform) {
+					seed_x = xm::matrix_vector_product(advance_matrix, seed_x);
+					word_t *substate = state.data() + uniform * (g_option_streams + 1);
+					if(!xm::word_equal(seed_x, substate[0])) {
+						std::cerr << "Warning: seeds are not uniformly spaced" << std::endl;
+					}
+				}
+			}
+			
 		} else {
+			
+			// get original seed
 			generate_seed_x(state.data());
 			generate_seed_y(state.data() + 1, g_option_streams);
-		}
-		
-		// generate uniform seeds
-		if(g_option_uniform_seeds != 1) {
-			word_t advance = xm::divide_period(g_option_uniform_seeds);
-			matrix_t advance_matrix = xm::matrix_power(xm::XORMIX_MATRIX, advance);
-			word_t seed_x = state[0];
-			for(uint64_t uniform = 1; uniform < g_option_uniform_seeds; ++uniform) {
-				seed_x = xm::matrix_vector_product(advance_matrix, seed_x);
-				word_t *substate = state.data() + uniform * (g_option_streams + 1);
-				substate[0] = seed_x;
-				generate_seed_y(substate + 1, g_option_streams);
+			
+			// generate uniform seeds
+			if(g_option_uniform_seeds != 1) {
+				word_t advance = xm::divide_period(g_option_uniform_seeds);
+				matrix_t advance_matrix = xm::matrix_power(xm::XORMIX_MATRIX, advance);
+				word_t seed_x = state[0];
+				for(uint64_t uniform = 1; uniform < g_option_uniform_seeds; ++uniform) {
+					seed_x = xm::matrix_vector_product(advance_matrix, seed_x);
+					word_t *substate = state.data() + uniform * (g_option_streams + 1);
+					substate[0] = seed_x;
+					generate_seed_y(substate + 1, g_option_streams);
+				}
 			}
+			
 		}
 		
 		// write seed to stdout
