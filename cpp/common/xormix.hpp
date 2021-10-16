@@ -27,10 +27,14 @@ struct xormix {
 	static constexpr limb_t MASK = (N == LIMB_BITS)? -limb_t(1) : (limb_t(1) << N) - limb_t(1);
 	
 	static const std::initializer_list<word_t> TEST_PERIODS;
-	static const matrix_t XORMIX_MATRIX;
+	static const matrix_t XORMIX_MATRIX, XORMIX_MATRIX_RA;
 	static const word_t XORMIX_SALTS[N * L];
-	static const size_t XORMIX_SHUFFLE[N * L];
-	static const size_t XORMIX_SHIFTS[4];
+	static const size_t XORMIX_SHUFFLE[N * L], XORMIX_SHUFFLE_RA[N * L];
+	static const size_t XORMIX_SHIFTS[4], XORMIX_SHIFTS_RA[4];
+	
+	static const size_t XORMIX_SHUFFLE_EXTRA[6][N * L];
+	
+	static const uint8_t XORMIX_XORTAPS[1024][8];
 	
 	static bool word_equal(word_t a, word_t b) {
 		for(size_t ii = 0; ii < L; ++ii) {
@@ -168,6 +172,36 @@ struct xormix {
 		}
 	}
 	
+	static void mix_halfword_ra(word_t &state, word_t &mixin, word_t mixup, const size_t *shifts) {
+		if(L == 1) {
+			limb_t s0 = mixup.l[0];
+			limb_t s1 = right_shift(mixup, shifts[0]);
+			limb_t s2 = right_shift(mixup, shifts[1]);
+			limb_t s3 = right_shift(mixup, shifts[2]);
+			limb_t s4 = right_shift(mixup, shifts[3]);
+			limb_t s5 = mixin.l[0];
+			limb_t temp = s0 ^ (s1 & ~s2) ^ (s3 & ~s4) ^ s5;
+			state.l[0] = ((temp << (N / 2)) | (state.l[0] >> (N / 2))) & MASK;
+			mixin.l[0] >>= N / 2;
+			mixup.l[0] >>= N / 2;
+		} else {
+			for(size_t ii = 0; ii < L / 2; ++ii) {
+				limb_t s0 = mixup.l[0];
+				limb_t s1 = right_shift(mixup, shifts[0]);
+				limb_t s2 = right_shift(mixup, shifts[1]);
+				limb_t s3 = right_shift(mixup, shifts[2]);
+				limb_t s4 = right_shift(mixup, shifts[3]);
+				limb_t s5 = mixin.l[0];
+				for(size_t jj = 0; jj < L - 1; ++jj) {
+					state.l[jj] = state.l[jj + 1];
+					mixin.l[jj] = mixin.l[jj + 1];
+					mixup.l[jj] = mixup.l[jj + 1];
+				}
+				state.l[L - 1] = (s0 ^ (s1 & ~s2) ^ (s3 & ~s4) ^ s5) & MASK;
+			}
+		}
+	}
+	
 	static void next(word_t *state, size_t streams) {
 		word_t state0 = state[0];
 		state[0] = matrix_vector_product(XORMIX_MATRIX, state0);
@@ -184,6 +218,215 @@ struct xormix {
 			for(size_t s = 0; s < streams; ++s) {
 				word_t mixup = (s == streams - 1)? state1 : state[s + 2];
 				mix_halfword(state[s + 1], mixin[s], mixup, XORMIX_SHIFTS);
+			}
+		}
+		/*word_t state1 = state[1];
+		for(size_t s = 0; s < streams; ++s) {
+			word_t mixup = (s == streams - 1)? state1 : state[s + 2];
+			state[s + 1] = matrix_vector_product(XORMIX_MATRIX2, mixup);
+			for(size_t ii = 0; ii < L; ++ii) {
+				state[s + 1].l[ii] ^= mixin[s].l[ii];
+			}
+		}*/
+		/*word_t zero = {};
+		for(size_t s = 0; s < streams; ++s) {
+			state[s + 1] = mixin[s];
+		}
+		for(size_t h = 0; h < 3; ++h) {
+			word_t state1 = state[1];
+			for(size_t s = 0; s < streams; ++s) {
+				word_t mixup = (s == streams - 1)? state1 : state[s + 2];
+				mix_halfword(state[s + 1], zero, mixup, XORMIX_SHIFTS);
+			}
+		}*/
+	}
+	
+	static limb_t right_rotate(word_t a, size_t k) {
+		size_t ii = k / N, i = k % N;
+		return (a.l[ii] >> i) | (a.l[(ii + 1) % L] << (N - i - 1) << 1);
+	}
+	
+	static void next_ra(word_t *state, word_t *output, size_t streams) {
+		// attempt 1
+		/*for(size_t s = 0; s < streams; ++s) {
+			word_t salted;
+			for(size_t ii = 0; ii < L; ++ii) {
+				salted.l[ii] = state0.l[ii] ^ XORMIX_SALTS[s].l[ii];
+			}
+			mixin[s] = shuffle_word(salted, s, XORMIX_SHUFFLE);
+		}
+		for(size_t s = 0; s < streams; ++s) {
+			for(size_t ii = 0; ii < L; ++ii) {
+				output[s].l[ii] = state1.l[ii] ^ mixin[s].l[ii];
+			}
+		}
+		word_t zero = {};
+		for(size_t h = 0; h < 2; ++h) {
+			word_t output0 = output[0];
+			for(size_t s = 0; s < streams; ++s) {
+				word_t mixup = (s == streams - 1)? output0 : output[s + 1];
+				mix_halfword(output[s], zero, mixup, XORMIX_SHIFTS);
+			}
+		}*/
+		// attempt 2
+		/*word_t state0 = state[0], state1 = state[1];
+		state[0] = matrix_vector_product(XORMIX_MATRIX, state0);
+		state[1] = matrix_vector_product(XORMIX_MATRIX_RA, state1);
+		word_t mixin[N * L];
+		for(size_t s = 0; s < streams; ++s) {
+			word_t salted;
+			for(size_t ii = 0; ii < L; ++ii) {
+				salted.l[ii] = state0.l[ii] ^ XORMIX_SALTS[s].l[ii];
+			}
+			output[s] = shuffle_word(salted, s, XORMIX_SHUFFLE);
+			mixin[s] = state1;
+		}
+		for(size_t h = 0; h < 2; ++h) {
+			word_t output0 = output[0];
+			for(size_t s = 0; s < streams; ++s) {
+				word_t mixup = (s == streams - 1)? output0 : output[s + 1];
+				mix_halfword(output[s], mixin[s], mixup, XORMIX_SHIFTS);
+			}
+		}*/
+		// attempt 3
+		/*word_t state0 = state[0], state1 = state[1];
+		state[0] = matrix_vector_product(XORMIX_MATRIX, state0);
+		state[1] = matrix_vector_product(XORMIX_MATRIX_RA, state1);
+		word_t mixin[N * L];
+		for(size_t s = 0; s < streams; ++s) {
+			word_t salted;
+			for(size_t ii = 0; ii < L; ++ii) {
+				salted.l[ii] = state0.l[ii] ^ XORMIX_SALTS[s].l[ii];
+			}
+			mixin[s] = shuffle_word(salted, s, XORMIX_SHUFFLE_RA);
+		}
+		uint64_t sbox = 0xbc9c8c0277f91175;
+		for(size_t s = 0; s < streams; ++s) {
+			for(size_t ii = 0; ii < L; ++ii) {
+				limb_t s0 = right_rotate(mixin[s], XORMIX_SHIFTS_RA[0]);
+				limb_t s1 = right_rotate(mixin[s], XORMIX_SHIFTS_RA[1]);
+				limb_t s2 = mixin[s].l[0];
+				limb_t s3 = right_rotate(state1, XORMIX_SHIFTS_RA[2]);
+				limb_t s4 = right_rotate(state1, XORMIX_SHIFTS_RA[3]);
+				limb_t s5 = state1.l[0];
+				//output[s].l[ii] = ((s0 & s2) ^ (s1 | s2) ^ (s3 & s5) ^ (s4 | s5)) & MASK;
+				//output[s].l[ii] = ((s0 & s3) ^ (s1 | s4) ^ (s2 ^ s5)) & MASK;
+				output[s].l[ii] = 0;
+				for(size_t i = 0; i < N; ++i) {
+					uint64_t p = (
+						(((s0 >> i) & 1) << 0) |
+						(((s1 >> i) & 1) << 1) |
+						(((s2 >> i) & 1) << 2) |
+						(((s3 >> i) & 1) << 3) |
+						(((s4 >> i) & 1) << 4) |
+						(((s5 >> i) & 1) << 5));
+					output[s].l[ii] |= ((sbox >> p) & 1) << i;
+				}
+			}
+		}*/
+		// attempt 4
+		/*word_t state0 = state[0], state1 = state[1];
+		state[0] = matrix_vector_product(XORMIX_MATRIX, state0);
+		state[1] = matrix_vector_product(XORMIX_MATRIX_RA, state1);
+		word_t mixin0[N * L], mixin1[N * L];
+		for(size_t s = 0; s < streams; ++s) {
+			word_t salted0, salted1;
+			for(size_t ii = 0; ii < L; ++ii) {
+				salted0.l[ii] = state0.l[ii] ^ XORMIX_SALTS[s].l[ii];
+				salted1.l[ii] = state1.l[ii] ^ XORMIX_SALTS[s].l[ii];
+			}
+			mixin0[s] = shuffle_word(salted0, s, XORMIX_SHUFFLE);
+			mixin1[s] = shuffle_word(salted1, 2 * s + s / (N * L / 2), XORMIX_SHUFFLE_RA);
+		}
+		for(size_t s = 0; s < streams; ++s) {
+			for(size_t ii = 0; ii < L; ++ii) {
+				limb_t s0 = right_rotate(mixin0[s], XORMIX_SHIFTS_RA[0]);
+				limb_t s1 = right_rotate(mixin0[s], XORMIX_SHIFTS_RA[1]);
+				limb_t s2 = right_rotate(mixin0[s], 0);
+				limb_t s3 = right_rotate(mixin1[s], XORMIX_SHIFTS_RA[2]);
+				limb_t s4 = right_rotate(mixin1[s], XORMIX_SHIFTS_RA[3]);
+				limb_t s5 = right_rotate(mixin1[s], 0);
+				//output[s].l[ii] = ((s0 & s5) ^ (s1 | s5) ^ (s3 & s2) ^ (s4 | s2)) & MASK;
+				//output[s].l[ii] = ((s0 & s5) ^ (s1 & ~s5) ^ (s3 & s2) ^ (s4 & ~s2)) & MASK;
+				//output[s].l[ii] = ((s0 & s5) ^ (s1) ^ (s3 | s2) ^ (s4)) & MASK;
+				output[s].l[ii] = ((s0 & s3) ^ (s1 | s4) ^ (s2 ^ s5)) & MASK;
+				//output[s].l[ii] = ((s0 ^ s3) ^ (s1 ^ s4) ^ (s2 ^ s5)) & MASK;
+				output[s] = matrix_vector_product(XORMIX_MATRIX, output[s]);
+			}
+		}*/
+		// attempt 5
+		/*word_t state0 = state[0], state1 = state[1], state2 = state[2];
+		state[0] = matrix_vector_product(XORMIX_MATRIX, state0);
+		state[1] = matrix_vector_product(XORMIX_MATRIX_RA, state1);
+		state[2] = matrix_vector_product(XORMIX_MATRIX_RA, state2);
+		word_t mixin0[N * L], mixin1[N * L], mixin2[N * L];
+		for(size_t s = 0; s < streams; ++s) {
+			word_t salted0, salted1, salted2;
+			for(size_t ii = 0; ii < L; ++ii) {
+				salted0.l[ii] = state0.l[ii] ^ XORMIX_SALTS[s].l[ii];
+				salted1.l[ii] = state1.l[ii] ^ XORMIX_SALTS[s].l[ii];
+				salted2.l[ii] = state2.l[ii] ^ XORMIX_SALTS[s].l[ii];
+			}
+			mixin0[s] = shuffle_word(salted0, s, XORMIX_SHUFFLE);
+			mixin1[s] = shuffle_word(salted1, s, XORMIX_SHUFFLE_RA); // 2 * s + s / (N * L / 2)
+			mixin2[s] = shuffle_word(salted2, s, XORMIX_SHUFFLE_RA); // 2 * s + s / (N * L / 2)
+		}
+		for(size_t s = 0; s < streams; ++s) {
+			output[s] = mixin0[s];
+		}
+		for(size_t h = 0; h < 3; ++h) {
+			word_t output0 = output[0];
+			for(size_t s = 0; s < streams; ++s) {
+				word_t mixup = (s == streams - 1)? output0 : output[s + 1];
+				mix_halfword(output[s], (h < 2)? mixin1[s] : mixin2[s], mixup, XORMIX_SHIFTS);
+			}
+		}*/
+		// attempt 6
+		/*word_t state0 = state[0], state1 = state[1];
+		state[0] = matrix_vector_product(XORMIX_MATRIX, state0);
+		state[1] = matrix_vector_product(XORMIX_MATRIX_RA, state1);
+		word_t mixin[6][N * L];
+		for(size_t s = 0; s < streams; ++s) {
+			word_t salted[6];
+			for(size_t ii = 0; ii < L; ++ii) {
+				for(size_t k = 0; k < 3; ++k) {
+					salted[k].l[ii] = state0.l[ii] ^ XORMIX_SALTS[s].l[ii];
+				}
+				for(size_t k = 3; k < 6; ++k) {
+					salted[k].l[ii] = state1.l[ii] ^ XORMIX_SALTS[s].l[ii];
+				}
+			}
+			for(size_t k = 0; k < 6; ++k) {
+				mixin[k][s] = shuffle_word(salted[k], s, XORMIX_SHUFFLE_EXTRA[k]);
+			}
+		}
+		for(size_t s = 0; s < streams; ++s) {
+			for(size_t ii = 0; ii < L; ++ii) {
+				limb_t s0 = mixin[0][s].l[ii];
+				limb_t s1 = mixin[1][s].l[ii];
+				limb_t s2 = mixin[2][s].l[ii];
+				limb_t s3 = mixin[3][s].l[ii];
+				limb_t s4 = mixin[4][s].l[ii];
+				limb_t s5 = mixin[5][s].l[ii];
+				output[s].l[ii] = ((s0 & s3) ^ (s1 | s4) ^ (s2 ^ s5)) & MASK;
+			}
+			output[s] = matrix_vector_product(XORMIX_MATRIX, output[s]);
+		}*/
+		// attempt 7
+		word_t state0 = state[0];
+		state[0] = matrix_vector_product(XORMIX_MATRIX, state0);
+		for(size_t s = 0; s < streams; ++s) {
+			for(size_t ii = 0; ii < L; ++ii) {
+				output[s].l[ii] = 0;
+				for(size_t i = 0; i < N; ++i) {
+					size_t r = (s * L * N + ii * N + i) % 1024;
+					limb_t res = 0;
+					for(size_t k = 0; k < 6; ++k) {
+						size_t t = XORMIX_XORTAPS[r][k] % (L * N);
+						res ^= (state0.l[t / N] >> (t % N)) & 1;
+					}
+					output[s].l[ii] |= res << i;
+				}
 			}
 		}
 	}
