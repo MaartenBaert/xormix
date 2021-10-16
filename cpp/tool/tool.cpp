@@ -30,6 +30,10 @@ uint32_t g_option_streams;
 uint32_t g_option_uniform_seeds;
 uint64_t g_option_output_cycles;
 
+bool g_option_short_seed;
+uint64_t g_option_discard_cycles;
+uint64_t g_option_repeats;
+
 format_t g_option_input_format;
 format_t g_option_output_format;
 
@@ -206,28 +210,56 @@ struct xormix_tool {
 	
 	static int run() {
 		
-		// avoid integer overflow
+		// allocate memory (and avoid integer overflow)
 		if(g_option_uniform_seeds > UINT32_MAX / (g_option_streams + 1))
 			throw std::bad_alloc();
-		
-		// generate initial state
 		std::vector<word_t> state((g_option_streams + 1) * g_option_uniform_seeds);
-		if(g_option_read_seed) {
+		std::vector<uint8_t> bytes(xm::WORD_BYTES * (g_option_streams + 1));
+		
+		std::vector<word_t> output(g_option_streams);
+		
+		for(uint64_t repeat = 0; repeat < g_option_repeats || g_option_repeats == 0; ++repeat) {
 			
-			// read seeds from stdin
-			std::vector<uint8_t> bytes(xm::WORD_BYTES * (g_option_streams + 1));
-			for(uint64_t uniform = 0; uniform < g_option_uniform_seeds; ++uniform) {
-				read_formatted(bytes.data(), 1);
-				read_formatted(bytes.data() + xm::WORD_BYTES, g_option_streams);
-				word_t *substate = state.data() + uniform * (g_option_streams + 1);
-				xm::unpack_words(bytes.data(), substate, g_option_streams + 1);
-				word_t zero = {};
-				if(xm::word_equal(state[0], zero)) {
-					std::cerr << "Warning: seed_x is zero" << std::endl;
+			// generate initial state
+			if(g_option_read_seed) {
+				
+				// read seeds from stdin (including all uniform seeds)
+				for(uint64_t uniform = 0; uniform < g_option_uniform_seeds; ++uniform) {
+					word_t *substate = state.data() + uniform * (g_option_streams + 1);
+					read_formatted(bytes.data(), 1);
+					xm::unpack_words(bytes.data(), substate, 1);
+					if(g_option_short_seed) {
+						read_formatted(bytes.data() + xm::WORD_BYTES, 1);
+						xm::unpack_words(bytes.data() + xm::WORD_BYTES, substate + 1, 1);
+						for(size_t s = 1; s < g_option_streams; ++s) {
+							substate[s + 1] = substate[1];
+						}
+					} else {
+						read_formatted(bytes.data() + xm::WORD_BYTES, g_option_streams);
+						xm::unpack_words(bytes.data() + xm::WORD_BYTES, substate + 1, g_option_streams);
+					}
+					word_t zero = {};
+					if(xm::word_equal(state[0], zero)) {
+						std::cerr << "Warning: seed_x is zero" << std::endl;
+					}
 				}
+				
+			} else {
+				
+				// get original seed
+				generate_seed_x(state.data());
+				if(g_option_short_seed) {
+					generate_seed_y(state.data() + 1, 1);
+					for(size_t s = 1; s < g_option_streams; ++s) {
+						state[s + 1] = state[1];
+					}
+				} else {
+					generate_seed_y(state.data() + 1, g_option_streams);
+				}
+				
 			}
 			
-			// check uniform seeds
+			// generate or check uniform seeds
 			if(g_option_uniform_seeds != 1) {
 				word_t advance = xm::divide_period(g_option_uniform_seeds);
 				matrix_t advance_matrix = xm::matrix_power(xm::XORMIX_MATRIX, advance);
@@ -235,65 +267,61 @@ struct xormix_tool {
 				for(uint64_t uniform = 1; uniform < g_option_uniform_seeds; ++uniform) {
 					seed_x = xm::matrix_vector_product(advance_matrix, seed_x);
 					word_t *substate = state.data() + uniform * (g_option_streams + 1);
-					if(!xm::word_equal(seed_x, substate[0])) {
-						std::cerr << "Warning: seeds are not uniformly spaced" << std::endl;
+					if(g_option_read_seed) {
+						if(!xm::word_equal(seed_x, substate[0])) {
+							std::cerr << "Warning: seeds are not uniformly spaced" << std::endl;
+						}
+					} else {
+						substate[0] = seed_x;
+						if(g_option_short_seed) {
+							for(size_t s = 0; s < g_option_streams; ++s) {
+								substate[s + 1] = substate[0];
+							}
+						} else {
+							generate_seed_y(substate + 1, g_option_streams);
+						}
 					}
 				}
 			}
 			
-		} else {
-			
-			// get original seed
-			generate_seed_x(state.data());
-			generate_seed_y(state.data() + 1, g_option_streams);
-			
-			// generate uniform seeds
-			if(g_option_uniform_seeds != 1) {
-				word_t advance = xm::divide_period(g_option_uniform_seeds);
-				matrix_t advance_matrix = xm::matrix_power(xm::XORMIX_MATRIX, advance);
-				word_t seed_x = state[0];
-				for(uint64_t uniform = 1; uniform < g_option_uniform_seeds; ++uniform) {
-					seed_x = xm::matrix_vector_product(advance_matrix, seed_x);
+			// write seed to stdout
+			if(g_option_write_seed) {
+				for(uint64_t uniform = 0; uniform < g_option_uniform_seeds; ++uniform) {
 					word_t *substate = state.data() + uniform * (g_option_streams + 1);
-					substate[0] = seed_x;
-					generate_seed_y(substate + 1, g_option_streams);
+					xm::pack_words(bytes.data(), substate, g_option_streams + 1);
+					if(g_option_output_format != FORMAT_BIN)
+						std::cout << "seed_x:" << std::endl;
+					write_formatted(bytes.data(), 1);
+					if(g_option_output_format != FORMAT_BIN)
+						std::cout << "seed_y:" << std::endl;
+					write_formatted(bytes.data() + xm::WORD_BYTES, (g_option_short_seed)? 1 : g_option_streams);
+					if(g_option_output_format != FORMAT_BIN)
+						std::cout << std::endl;
 				}
 			}
 			
-		}
-		
-		// write seed to stdout
-		if(g_option_write_seed) {
-			std::vector<uint8_t> bytes(xm::WORD_BYTES * (g_option_streams + 1));
-			for(uint64_t uniform = 0; uniform < g_option_uniform_seeds; ++uniform) {
-				word_t *substate = state.data() + uniform * (g_option_streams + 1);
-				xm::pack_words(bytes.data(), substate, g_option_streams + 1);
+			// write output to stdout
+			if(g_option_write_output) {
 				if(g_option_output_format != FORMAT_BIN)
-					std::cout << "seed_x:" << std::endl;
-				write_formatted(bytes.data(), 1);
-				if(g_option_output_format != FORMAT_BIN)
-					std::cout << "seed_y:" << std::endl;
-				write_formatted(bytes.data() + xm::WORD_BYTES, g_option_streams);
+					std::cout << "output:" << std::endl;
+				for(uint64_t cycle = 0; cycle < g_option_discard_cycles; ++cycle) {
+					for(uint64_t uniform = 0; uniform < g_option_uniform_seeds; ++uniform) {
+						word_t *substate = state.data() + uniform * (g_option_streams + 1);
+						xm::next(substate, g_option_streams);
+					}
+				}
+				for(uint64_t cycle = 0; cycle < g_option_output_cycles || g_option_output_cycles == 0; ++cycle) {
+					for(uint64_t uniform = 0; uniform < g_option_uniform_seeds; ++uniform) {
+						word_t *substate = state.data() + uniform * (g_option_streams + 1);
+						xm::pack_words(bytes.data(), substate + 1, g_option_streams);
+						write_formatted(bytes.data(), g_option_streams);
+						xm::next(substate, g_option_streams);
+					}
+				}
 				if(g_option_output_format != FORMAT_BIN)
 					std::cout << std::endl;
 			}
-		}
-		
-		// write output to stdout
-		if(g_option_write_output) {
-			if(g_option_output_format != FORMAT_BIN)
-				std::cout << "output:" << std::endl;
-			std::vector<uint8_t> bytes(xm::WORD_BYTES * g_option_streams);
-			for(uint64_t cycle = 0; cycle < g_option_output_cycles || g_option_output_cycles == 0; ++cycle) {
-				for(uint64_t uniform = 0; uniform < g_option_uniform_seeds; ++uniform) {
-					word_t *substate = state.data() + uniform * (g_option_streams + 1);
-					xm::pack_words(bytes.data(), substate + 1, g_option_streams);
-					write_formatted(bytes.data(), g_option_streams);
-					xm::next(substate, g_option_streams);
-				}
-			}
-			if(g_option_output_format != FORMAT_BIN)
-				std::cout << std::endl;
+			
 		}
 		
 		return EXIT_SUCCESS;
@@ -308,21 +336,24 @@ int main(int argc, char **argv) {
 		
 		cxxopts::Options options("xormix-tool", "Command-line utility for the xormix random number generator");
 		options.add_options()
-			("h,help"         , "Show this help message"                    , cxxopts::value(g_option_help         )                      )
-			("r,read-seed"    , "Read seed from stdin"                      , cxxopts::value(g_option_read_seed    )                      )
-			("e,write-seed"   , "Write seed to stdout"                      , cxxopts::value(g_option_write_seed   )                      )
-			("o,write-output" , "Write output to stdout"                    , cxxopts::value(g_option_write_output )                      )
-			("w,word-size"    , "Word size in bits"                         , cxxopts::value(g_option_word_size    )->default_value("64" ))
-			("s,streams"      , "Number of streams"                         , cxxopts::value(g_option_streams      )->default_value("1"  ))
-			("u,uniform-seeds", "Number of uniformly distributed seeds"     , cxxopts::value(g_option_uniform_seeds)->default_value("1"  ))
-			("c,output-cycles", "Number of output cycles [0 means infinite]", cxxopts::value(g_option_output_cycles)->default_value("0"  ))
-			("i,input-format" , "Input format [bin, hex, vhdl or verilog]"  , cxxopts::value(g_option_input_format )->default_value("hex"))
-			("f,output-format", "Output format [bin, hex, vhdl or verilog]" , cxxopts::value(g_option_output_format)->default_value("hex"))
+			("h,help"          , "Show this help message"                    , cxxopts::value(g_option_help          )                      )
+			("r,read-seed"     , "Read seed from stdin"                      , cxxopts::value(g_option_read_seed     )                      )
+			("e,write-seed"    , "Write seed to stdout"                      , cxxopts::value(g_option_write_seed    )                      )
+			("o,write-output"  , "Write output to stdout"                    , cxxopts::value(g_option_write_output  )                      )
+			("w,word-size"     , "Word size in bits"                         , cxxopts::value(g_option_word_size     )->default_value("64" ))
+			("s,streams"       , "Number of streams"                         , cxxopts::value(g_option_streams       )->default_value("1"  ))
+			("u,uniform-seeds" , "Number of uniformly distributed seeds"     , cxxopts::value(g_option_uniform_seeds )->default_value("1"  ))
+			("c,output-cycles" , "Number of output cycles [0 means infinite]", cxxopts::value(g_option_output_cycles )->default_value("0"  ))
+			("t,short-seed"    , "Use simplified seeding with short seeds"   , cxxopts::value(g_option_short_seed    )                      )
+			("d,discard-cycles", "Number of cycles to discard after seeding" , cxxopts::value(g_option_discard_cycles)->default_value("0"  ))
+			("p,repeats"       , "Number of repeats [0 means infinite]"      , cxxopts::value(g_option_repeats       )->default_value("1"  ))
+			("i,input-format"  , "Input format [bin, hex, vhdl or verilog]"  , cxxopts::value(g_option_input_format  )->default_value("hex"))
+			("f,output-format" , "Output format [bin, hex, vhdl or verilog]" , cxxopts::value(g_option_output_format )->default_value("hex"))
 		;
 		options.parse(argc, argv);
 		
 		if(!g_option_help && !g_option_write_seed && !g_option_write_output) {
-			std::cerr << "Error: No action specified" << std::endl;
+			std::cerr << "Error: No action specified (-e or -o is required)" << std::endl;
 			std::cerr << options.help() << std::endl;
 			return EXIT_FAILURE;
 		}
