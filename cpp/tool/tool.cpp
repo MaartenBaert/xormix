@@ -307,15 +307,17 @@ struct xormix_tool {
 				for(uint64_t cycle = 0; cycle < g_option_discard_cycles; ++cycle) {
 					for(uint64_t uniform = 0; uniform < g_option_uniform_seeds; ++uniform) {
 						word_t *substate = state.data() + uniform * (g_option_streams + 1);
-						xm::next(substate, g_option_streams);
+						xm::next_ra(substate, output.data(), g_option_streams);
 					}
 				}
 				for(uint64_t cycle = 0; cycle < g_option_output_cycles || g_option_output_cycles == 0; ++cycle) {
 					for(uint64_t uniform = 0; uniform < g_option_uniform_seeds; ++uniform) {
 						word_t *substate = state.data() + uniform * (g_option_streams + 1);
-						xm::pack_words(bytes.data(), substate + 1, g_option_streams);
+						//xm::pack_words(bytes.data(), substate + 1, g_option_streams);
+						//write_formatted(bytes.data(), g_option_streams);
+						xm::next_ra(substate, output.data(), g_option_streams);
+						xm::pack_words(bytes.data(), output.data(), g_option_streams);
 						write_formatted(bytes.data(), g_option_streams);
-						xm::next(substate, g_option_streams);
 					}
 				}
 				if(g_option_output_format != FORMAT_BIN)
