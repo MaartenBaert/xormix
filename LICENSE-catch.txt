@@ -1,4 +1,4 @@
-This license applies only to cpp/catch.hpp
+This license applies only to cpp/3rdparty/catch.hpp
 
 -----
 

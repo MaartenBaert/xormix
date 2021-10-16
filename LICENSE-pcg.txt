@@ -1,4 +1,4 @@
-This license applies only to cpp/pcg.hpp
+This license applies only to cpp/3rdparty/pcg.hpp
 
 -----
 
