@@ -14,7 +14,7 @@ entity xormix64 is
         
         -- clock and synchronous reset
         clk    : in std_logic;
-        reset  : in std_logic;
+        rst    : in std_logic;
         
         -- configuration
         seed_x : in std_logic_vector(63 downto 0);
@@ -31,22 +31,22 @@ architecture rtl of xormix64 is
     
     type salts_t is array(0 to 63) of std_logic_vector(63 downto 0);
     constant salts : salts_t := (
-        X"6c1f4cf86b670928", X"254b7cacdf1f7f73", X"9384f7a0b1b8600e", X"6402b3d837dfb664",
-        X"7cb8aabfdc88b651", X"b89b5f5e1de22367", X"5def7160d6d4e4b9", X"8d2ef95b68e2110b",
-        X"ffc0742fc5f3dbe3", X"87ce80324751b6e0", X"147610fcd384ae2a", X"bb625e1c429581e7",
-        X"42c3fc05de25f0c0", X"db6752d26b3e7d9a", X"3edd68a5eb6ba2b1", X"63600f8ae4c7a36a",
-        X"a8b436b35f0594b6", X"e7740ee396e0303c", X"4711b906c747cf69", X"2bd0973542881c68",
-        X"9819f173380f1778", X"05fa834a446f5780", X"3aca5c28507a9812", X"3f8fae1df7b5284f",
-        X"0fca61766c25a956", X"344a280b81b3dc59", X"9ae49767ed2aac9d", X"136354a988e7dc44",
-        X"a47463136a589763", X"cca5d6d4ad8ff5e6", X"3e2a049598688d41", X"d79394eb53e8e614",
-        X"3bebfb323f75041e", X"635aa20bf255c061", X"6026a67855446ab6", X"6f801ac1a01937d3",
-        X"282dcf755931c792", X"42a866fb536b5c24", X"fc666ffe8b3ee689", X"a2e9693598d4d120",
-        X"68d7594964f92460", X"adbcae73ac34dd49", X"993e260d3c6f44bc", X"5c72e28f77c7ab3d",
-        X"6863f70a8cc13391", X"b3bc2c1931d5afe6", X"590494397519cd48", X"77ecc3481691cd65",
-        X"1388ee338164ea29", X"2ff27333a309bbbc", X"eaebc14b790da4b9", X"61c2af10615a09fb",
-        X"a35d4d739948bace", X"dda19468d60247e6", X"cf1f611a8269bc91", X"0adeb7af980adf73",
-        X"14eccb6a88a0129e", X"71aaacdba83328de", X"135e1971c5db62b7", X"c5041c150065d8fd",
-        X"42a68068988aff0c", X"f811709d805968db", X"e3bd59c3b7844bc4", X"e9602cb6280a6c70"
+        x"6c1f4cf86b670928", x"254b7cacdf1f7f73", x"9384f7a0b1b8600e", x"6402b3d837dfb664",
+        x"7cb8aabfdc88b651", x"b89b5f5e1de22367", x"5def7160d6d4e4b9", x"8d2ef95b68e2110b",
+        x"ffc0742fc5f3dbe3", x"87ce80324751b6e0", x"147610fcd384ae2a", x"bb625e1c429581e7",
+        x"42c3fc05de25f0c0", x"db6752d26b3e7d9a", x"3edd68a5eb6ba2b1", x"63600f8ae4c7a36a",
+        x"a8b436b35f0594b6", x"e7740ee396e0303c", x"4711b906c747cf69", x"2bd0973542881c68",
+        x"9819f173380f1778", x"05fa834a446f5780", x"3aca5c28507a9812", x"3f8fae1df7b5284f",
+        x"0fca61766c25a956", x"344a280b81b3dc59", x"9ae49767ed2aac9d", x"136354a988e7dc44",
+        x"a47463136a589763", x"cca5d6d4ad8ff5e6", x"3e2a049598688d41", x"d79394eb53e8e614",
+        x"3bebfb323f75041e", x"635aa20bf255c061", x"6026a67855446ab6", x"6f801ac1a01937d3",
+        x"282dcf755931c792", x"42a866fb536b5c24", x"fc666ffe8b3ee689", x"a2e9693598d4d120",
+        x"68d7594964f92460", x"adbcae73ac34dd49", x"993e260d3c6f44bc", x"5c72e28f77c7ab3d",
+        x"6863f70a8cc13391", x"b3bc2c1931d5afe6", x"590494397519cd48", x"77ecc3481691cd65",
+        x"1388ee338164ea29", x"2ff27333a309bbbc", x"eaebc14b790da4b9", x"61c2af10615a09fb",
+        x"a35d4d739948bace", x"dda19468d60247e6", x"cf1f611a8269bc91", x"0adeb7af980adf73",
+        x"14eccb6a88a0129e", x"71aaacdba83328de", x"135e1971c5db62b7", x"c5041c150065d8fd",
+        x"42a68068988aff0c", x"f811709d805968db", x"e3bd59c3b7844bc4", x"e9602cb6280a6c70"
     );
     
     signal r_state_x : std_logic_vector(63 downto 0);
@@ -66,7 +66,7 @@ begin
         
     begin
         if rising_edge(clk) then
-            if reset = '1' then
+            if rst = '1' then
                 
                 r_state_x <= seed_x;
                 r_state_y <= seed_y;

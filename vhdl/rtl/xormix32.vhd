@@ -14,7 +14,7 @@ entity xormix32 is
         
         -- clock and synchronous reset
         clk    : in std_logic;
-        reset  : in std_logic;
+        rst    : in std_logic;
         
         -- configuration
         seed_x : in std_logic_vector(31 downto 0);
@@ -31,14 +31,14 @@ architecture rtl of xormix32 is
     
     type salts_t is array(0 to 31) of std_logic_vector(31 downto 0);
     constant salts : salts_t := (
-        X"198f8d32", X"46d9b8ac", X"57f90206", X"cb246290",
-        X"5fda94c2", X"b9969e83", X"990053fe", X"0cef1f8b",
-        X"9baafefa", X"232b8463", X"0fc77197", X"d113a2d8",
-        X"d6c99ef7", X"f3fb7189", X"9ceeb1dd", X"352df180",
-        X"feed780c", X"ee211518", X"3afaca18", X"95f13c50",
-        X"d8449f2a", X"59752549", X"854f0980", X"234a07b4",
-        X"51c0c69b", X"a71d489e", X"618cbc79", X"ab0e51e1",
-        X"965c4507", X"e90488a4", X"73674eb7", X"00af1456"
+        x"198f8d32", x"46d9b8ac", x"57f90206", x"cb246290",
+        x"5fda94c2", x"b9969e83", x"990053fe", x"0cef1f8b",
+        x"9baafefa", x"232b8463", x"0fc77197", x"d113a2d8",
+        x"d6c99ef7", x"f3fb7189", x"9ceeb1dd", x"352df180",
+        x"feed780c", x"ee211518", x"3afaca18", x"95f13c50",
+        x"d8449f2a", x"59752549", x"854f0980", x"234a07b4",
+        x"51c0c69b", x"a71d489e", x"618cbc79", x"ab0e51e1",
+        x"965c4507", x"e90488a4", x"73674eb7", x"00af1456"
     );
     
     signal r_state_x : std_logic_vector(31 downto 0);
@@ -58,7 +58,7 @@ begin
         
     begin
         if rising_edge(clk) then
-            if reset = '1' then
+            if rst = '1' then
                 
                 r_state_x <= seed_x;
                 r_state_y <= seed_y;

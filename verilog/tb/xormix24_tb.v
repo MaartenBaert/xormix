@@ -121,19 +121,22 @@ module xormix24_tb;
     
     // DUT signals
     reg clk = 0;
-    reg reset;
+    reg rst;
     reg enable;
     wire [24 * streams - 1 : 0] result;
     
     // flag to stop simulation
     integer run = 1;
     
+    // error counter
+    integer errors = 0;
+    
     // DUT
     xormix24 #(
         .streams(streams)
     ) inst_xormix (
         .clk(clk),
-        .reset(reset),
+        .rst(rst),
         .seed_x(seed_x),
         .seed_y(seed_y),
         .enable(enable),
@@ -155,16 +158,19 @@ module xormix24_tb;
     // input/output process
     initial begin
         @(posedge clk);
-        reset <= 1'b1;
+        rst <= 1'b1;
         enable <= 1'b0;
         @(posedge clk);
-        reset <= 1'b0;
+        rst <= 1'b0;
         enable <= 1'b1;
         for (i = 0; i < results; i = i + 1) begin
             @(posedge clk);
-            if (result !== ref_result[24 * streams * i +: 24 * streams])
-                $display("Incorrect result");
+            if (result !== ref_result[24 * streams * i +: 24 * streams]) begin
+                $display("Incorrect result for i=%d", i);
+                errors = errors + 1;
+            end
         end
+        $display("Test complete, number of errors: %d", errors);
         run <= 0;
     end
     

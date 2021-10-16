@@ -14,7 +14,7 @@ entity xormix48 is
         
         -- clock and synchronous reset
         clk    : in std_logic;
-        reset  : in std_logic;
+        rst    : in std_logic;
         
         -- configuration
         seed_x : in std_logic_vector(47 downto 0);
@@ -31,18 +31,18 @@ architecture rtl of xormix48 is
     
     type salts_t is array(0 to 47) of std_logic_vector(47 downto 0);
     constant salts : salts_t := (
-        X"dc2a970723c9", X"e3e9a7b5f00f", X"368fddfe10b2", X"75cf3224f670",
-        X"adc3319ee962", X"c9fdd5da7238", X"838aa6d68e51", X"34504e889c4e",
-        X"16f61844dd41", X"316767a3bcb6", X"4f2b4ee6a079", X"8a9ef2995097",
-        X"8f8919a04ad3", X"54d0862260f6", X"59bf4852d6de", X"e182ee2c64dc",
-        X"117087d44a4c", X"2de1ba749c87", X"4db37369078b", X"c4d0b2be2d19",
-        X"fe1e25f4f213", X"11f41b1ba06e", X"0f2cf602d40a", X"1a4f0b78edd2",
-        X"0635bdf9a9a1", X"e6066341f129", X"d63a2e6c6b6e", X"3f0b1417a83e",
-        X"aa5f9fc3447b", X"fd4ca29740b2", X"d307b0424a1f", X"377cf18c8a09",
-        X"4ae1ee2f8ff1", X"6470f197fbcc", X"93fb56272e46", X"b8ff040d894b",
-        X"7de7947afb4b", X"8c2c614e379f", X"981e3a7298fb", X"1d16c2d1672f",
-        X"3e8785982f5c", X"e92ab1204c26", X"f7c8549141c1", X"109c81c9df19",
-        X"9379f90a2ff8", X"583491406df0", X"00302447d0cf", X"34c3236725e9"
+        x"dc2a970723c9", x"e3e9a7b5f00f", x"368fddfe10b2", x"75cf3224f670",
+        x"adc3319ee962", x"c9fdd5da7238", x"838aa6d68e51", x"34504e889c4e",
+        x"16f61844dd41", x"316767a3bcb6", x"4f2b4ee6a079", x"8a9ef2995097",
+        x"8f8919a04ad3", x"54d0862260f6", x"59bf4852d6de", x"e182ee2c64dc",
+        x"117087d44a4c", x"2de1ba749c87", x"4db37369078b", x"c4d0b2be2d19",
+        x"fe1e25f4f213", x"11f41b1ba06e", x"0f2cf602d40a", x"1a4f0b78edd2",
+        x"0635bdf9a9a1", x"e6066341f129", x"d63a2e6c6b6e", x"3f0b1417a83e",
+        x"aa5f9fc3447b", x"fd4ca29740b2", x"d307b0424a1f", x"377cf18c8a09",
+        x"4ae1ee2f8ff1", x"6470f197fbcc", x"93fb56272e46", x"b8ff040d894b",
+        x"7de7947afb4b", x"8c2c614e379f", x"981e3a7298fb", x"1d16c2d1672f",
+        x"3e8785982f5c", x"e92ab1204c26", x"f7c8549141c1", x"109c81c9df19",
+        x"9379f90a2ff8", x"583491406df0", x"00302447d0cf", x"34c3236725e9"
     );
     
     signal r_state_x : std_logic_vector(47 downto 0);
@@ -62,7 +62,7 @@ begin
         
     begin
         if rising_edge(clk) then
-            if reset = '1' then
+            if rst = '1' then
                 
                 r_state_x <= seed_x;
                 r_state_y <= seed_y;

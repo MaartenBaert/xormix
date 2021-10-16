@@ -14,7 +14,7 @@ entity xormix24 is
         
         -- clock and synchronous reset
         clk    : in std_logic;
-        reset  : in std_logic;
+        rst    : in std_logic;
         
         -- configuration
         seed_x : in std_logic_vector(23 downto 0);
@@ -31,12 +31,12 @@ architecture rtl of xormix24 is
     
     type salts_t is array(0 to 23) of std_logic_vector(23 downto 0);
     constant salts : salts_t := (
-        X"d96a94", X"8c3c8d", X"b8b710", X"112b89",
-        X"6aaf55", X"295e05", X"a64b72", X"39b1db",
-        X"5c5955", X"915302", X"040da6", X"e79f3f",
-        X"f52624", X"ce7aee", X"74c90b", X"00c73d",
-        X"1cee53", X"eb76b1", X"271093", X"73ac8e",
-        X"57622b", X"bf29d0", X"02efea", X"a1befc"
+        x"d96a94", x"8c3c8d", x"b8b710", x"112b89",
+        x"6aaf55", x"295e05", x"a64b72", x"39b1db",
+        x"5c5955", x"915302", x"040da6", x"e79f3f",
+        x"f52624", x"ce7aee", x"74c90b", x"00c73d",
+        x"1cee53", x"eb76b1", x"271093", x"73ac8e",
+        x"57622b", x"bf29d0", x"02efea", x"a1befc"
     );
     
     signal r_state_x : std_logic_vector(23 downto 0);
@@ -56,7 +56,7 @@ begin
         
     begin
         if rising_edge(clk) then
-            if reset = '1' then
+            if rst = '1' then
                 
                 r_state_x <= seed_x;
                 r_state_y <= seed_y;

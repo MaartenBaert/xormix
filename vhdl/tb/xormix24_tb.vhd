@@ -15,118 +15,118 @@ architecture bhv of xormix24_tb is
     constant streams : integer := 4;
     constant results : integer := 100;
     constant seed_x  : std_logic_vector(23 downto 0) :=
-        X"1244da";
+        x"1244da";
     constant seed_y  : std_logic_vector(24 * streams - 1 downto 0) :=
-        X"09e3cd3f2a82eedcfdda1a8e";
+        x"09e3cd3f2a82eedcfdda1a8e";
     
     -- reference result
     type result_array_t is array(0 to results - 1) of std_logic_vector(24 * streams - 1 downto 0);
     signal ref_result : result_array_t := (
-        X"09e3cd3f2a82eedcfdda1a8e",
-        X"9c8ab069d787303c1f17b52c",
-        X"45ba8dbccc4a70c64f3e4f72",
-        X"7f5e37f3191889ef6072c6c3",
-        X"e12083dc8c74e5a3e619ed0a",
-        X"6823e2a532e0e7b145dc3419",
-        X"1f5f0b2930950b877c321915",
-        X"a6e256d21078d71a163e844c",
-        X"ad7e64b70b3b78b7abba2e95",
-        X"a8a0eeb14a632a71067fdace",
-        X"79470e7fe7547d6a16eb689d",
-        X"c0e1d2b1fa40da5b7a41b2f7",
-        X"1dde9dfed323dd9fb92a486b",
-        X"ea078b1ecb1232fc7d685aef",
-        X"8617ccd1d3291b8a0a170272",
-        X"a9a0340a286c72faeba9f882",
-        X"fbe841d8d84cd6664bf63e11",
-        X"85f91d412d41d7fb91e83ddd",
-        X"8663690351e7586bc5f9249f",
-        X"c08509133aae114332ef808d",
-        X"6671d7dbae7f98e33648e3b2",
-        X"a23daf41694971b340893198",
-        X"8901b250bbb768a6222b4ba2",
-        X"dfe895adee09e7fd5c8868d3",
-        X"e485a6d466a158783f8125df",
-        X"af857f8e4184105fb6a3a1d4",
-        X"48907555be56c00f3a1cc0d4",
-        X"615265447a964c77e1951f7a",
-        X"b28fc13d29ea22a78c79c593",
-        X"005d5bac7da34ed554533ab6",
-        X"ddb6b9de2da824e51e5aa223",
-        X"79daf35d6e6db86c4bcd9fd4",
-        X"183b6a01dcfef91722802f1a",
-        X"40ac66b511b97d6404076ca5",
-        X"f8c0dfe555aeb0b8c5645361",
-        X"c3f543b215b3c5cf2665939c",
-        X"5781b7e7ab92cd54c2a0447c",
-        X"5ebad99067843d4054b09398",
-        X"bb9791edd29b5209202d3477",
-        X"b8584967741c44988d49f774",
-        X"de79d688ff065fdb07c877c9",
-        X"2e76f10e65928109270617c5",
-        X"d052b704bb1a63183e0b17d2",
-        X"faf42f0254b3bc9fed42507e",
-        X"3f6ada465b0c5c4b072ece97",
-        X"8be38317ec83b7beaa6930e8",
-        X"79854958462a4ed88054e1e3",
-        X"40f2f4f6c15d8371e2bb94d6",
-        X"8af89ffd2bbb5513d9f808d1",
-        X"fb21b80b8554857adaf0e8f2",
-        X"290710b2c0aa28e300de879b",
-        X"d311e1bda53234bb31398955",
-        X"39225c6f7085a29d473a5090",
-        X"26cff834452c96897d48b820",
-        X"cbb34e2711be2c0e110d6ad6",
-        X"d58604727633f3b535d872ac",
-        X"33505199c4b5a12f9d75b5f1",
-        X"d1e5a9acdacf6bfd33994787",
-        X"fdd2c289bbcf2488f413e899",
-        X"1c77b4ca3229d85d7333b1bc",
-        X"1e43f7fd7c8de0a71d629900",
-        X"07880e33ad0300fae3e3fee0",
-        X"7c29a64eba8843da678e7e6b",
-        X"ae5da7e40324951642193f23",
-        X"098e763e7c82396a5f263348",
-        X"d60eefcfd22e2b5a164ffae8",
-        X"bd43f29f780b2f3d211c8e54",
-        X"1022126810ac846cda1d97fa",
-        X"f6206f1fe8a42877d211881d",
-        X"ebfcfb62e8ab000da128c311",
-        X"c936c4148cbc46d2263476fc",
-        X"a9fec84791424cc5fc49759e",
-        X"b4ef5f43c651c49ae74b1489",
-        X"b582fd1ff01bf0601864ec7b",
-        X"55ad7f2b57ece959fa2abf3a",
-        X"c0560b48c5d54337b3149655",
-        X"6290dd873aeb44058b991d58",
-        X"d3222fc450c0aa7abc37579d",
-        X"63c8316b9b597bbd14c2b8ca",
-        X"3cdc79e6df077df03782a9c7",
-        X"96ae0068466ba283c3c5d16d",
-        X"66608085782403f606062982",
-        X"7e1ff130777ce65253662303",
-        X"398f58e13320e0b47d7a89f2",
-        X"04e93b0b6a61b1fb04ab696f",
-        X"3c449f23b58c2b27003a5711",
-        X"a72ce6797fa8f7ddde8b3ef8",
-        X"192dadd65f86cf93073c5656",
-        X"f9676c1d953d5d2b28f1a36b",
-        X"355066f1337f03dfb9e5ee54",
-        X"af84f8db9fd1678f8baec5e2",
-        X"8c39a6ee114d7cbe4927d3e0",
-        X"f86a028c72f740c233430406",
-        X"777fc098096dddd925e99c98",
-        X"b012559a58a0f50479f79bf7",
-        X"b84811d55bad3a0636b558ba",
-        X"9c458d74d21921f13e948a9f",
-        X"a6de814410cb1da68474147b",
-        X"3f167ad8daae665d4b9fdb0b",
-        X"43a52d1c0923d60f8999dd2b"
+        x"09e3cd3f2a82eedcfdda1a8e",
+        x"9c8ab069d787303c1f17b52c",
+        x"45ba8dbccc4a70c64f3e4f72",
+        x"7f5e37f3191889ef6072c6c3",
+        x"e12083dc8c74e5a3e619ed0a",
+        x"6823e2a532e0e7b145dc3419",
+        x"1f5f0b2930950b877c321915",
+        x"a6e256d21078d71a163e844c",
+        x"ad7e64b70b3b78b7abba2e95",
+        x"a8a0eeb14a632a71067fdace",
+        x"79470e7fe7547d6a16eb689d",
+        x"c0e1d2b1fa40da5b7a41b2f7",
+        x"1dde9dfed323dd9fb92a486b",
+        x"ea078b1ecb1232fc7d685aef",
+        x"8617ccd1d3291b8a0a170272",
+        x"a9a0340a286c72faeba9f882",
+        x"fbe841d8d84cd6664bf63e11",
+        x"85f91d412d41d7fb91e83ddd",
+        x"8663690351e7586bc5f9249f",
+        x"c08509133aae114332ef808d",
+        x"6671d7dbae7f98e33648e3b2",
+        x"a23daf41694971b340893198",
+        x"8901b250bbb768a6222b4ba2",
+        x"dfe895adee09e7fd5c8868d3",
+        x"e485a6d466a158783f8125df",
+        x"af857f8e4184105fb6a3a1d4",
+        x"48907555be56c00f3a1cc0d4",
+        x"615265447a964c77e1951f7a",
+        x"b28fc13d29ea22a78c79c593",
+        x"005d5bac7da34ed554533ab6",
+        x"ddb6b9de2da824e51e5aa223",
+        x"79daf35d6e6db86c4bcd9fd4",
+        x"183b6a01dcfef91722802f1a",
+        x"40ac66b511b97d6404076ca5",
+        x"f8c0dfe555aeb0b8c5645361",
+        x"c3f543b215b3c5cf2665939c",
+        x"5781b7e7ab92cd54c2a0447c",
+        x"5ebad99067843d4054b09398",
+        x"bb9791edd29b5209202d3477",
+        x"b8584967741c44988d49f774",
+        x"de79d688ff065fdb07c877c9",
+        x"2e76f10e65928109270617c5",
+        x"d052b704bb1a63183e0b17d2",
+        x"faf42f0254b3bc9fed42507e",
+        x"3f6ada465b0c5c4b072ece97",
+        x"8be38317ec83b7beaa6930e8",
+        x"79854958462a4ed88054e1e3",
+        x"40f2f4f6c15d8371e2bb94d6",
+        x"8af89ffd2bbb5513d9f808d1",
+        x"fb21b80b8554857adaf0e8f2",
+        x"290710b2c0aa28e300de879b",
+        x"d311e1bda53234bb31398955",
+        x"39225c6f7085a29d473a5090",
+        x"26cff834452c96897d48b820",
+        x"cbb34e2711be2c0e110d6ad6",
+        x"d58604727633f3b535d872ac",
+        x"33505199c4b5a12f9d75b5f1",
+        x"d1e5a9acdacf6bfd33994787",
+        x"fdd2c289bbcf2488f413e899",
+        x"1c77b4ca3229d85d7333b1bc",
+        x"1e43f7fd7c8de0a71d629900",
+        x"07880e33ad0300fae3e3fee0",
+        x"7c29a64eba8843da678e7e6b",
+        x"ae5da7e40324951642193f23",
+        x"098e763e7c82396a5f263348",
+        x"d60eefcfd22e2b5a164ffae8",
+        x"bd43f29f780b2f3d211c8e54",
+        x"1022126810ac846cda1d97fa",
+        x"f6206f1fe8a42877d211881d",
+        x"ebfcfb62e8ab000da128c311",
+        x"c936c4148cbc46d2263476fc",
+        x"a9fec84791424cc5fc49759e",
+        x"b4ef5f43c651c49ae74b1489",
+        x"b582fd1ff01bf0601864ec7b",
+        x"55ad7f2b57ece959fa2abf3a",
+        x"c0560b48c5d54337b3149655",
+        x"6290dd873aeb44058b991d58",
+        x"d3222fc450c0aa7abc37579d",
+        x"63c8316b9b597bbd14c2b8ca",
+        x"3cdc79e6df077df03782a9c7",
+        x"96ae0068466ba283c3c5d16d",
+        x"66608085782403f606062982",
+        x"7e1ff130777ce65253662303",
+        x"398f58e13320e0b47d7a89f2",
+        x"04e93b0b6a61b1fb04ab696f",
+        x"3c449f23b58c2b27003a5711",
+        x"a72ce6797fa8f7ddde8b3ef8",
+        x"192dadd65f86cf93073c5656",
+        x"f9676c1d953d5d2b28f1a36b",
+        x"355066f1337f03dfb9e5ee54",
+        x"af84f8db9fd1678f8baec5e2",
+        x"8c39a6ee114d7cbe4927d3e0",
+        x"f86a028c72f740c233430406",
+        x"777fc098096dddd925e99c98",
+        x"b012559a58a0f50479f79bf7",
+        x"b84811d55bad3a0636b558ba",
+        x"9c458d74d21921f13e948a9f",
+        x"a6de814410cb1da68474147b",
+        x"3f167ad8daae665d4b9fdb0b",
+        x"43a52d1c0923d60f8999dd2b"
     );
     
     -- DUT signals
     signal clk    : std_logic := '0';
-    signal reset  : std_logic;
+    signal rst    : std_logic;
     signal enable : std_logic;
     signal result : std_logic_vector(24 * streams - 1 downto 0);
     
@@ -140,7 +140,7 @@ begin
         streams => streams
     ) port map (
         clk    => clk,
-        reset  => reset,
+        rst    => rst,
         seed_x => seed_x,
         seed_y => seed_y,
         enable => enable,
@@ -161,17 +161,22 @@ begin
     
     -- input/output process
     process
+        variable errors : natural := 0;
     begin
         wait until rising_edge(clk);
-        reset <= '1';
+        rst <= '1';
         enable <= '0';
         wait until rising_edge(clk);
-        reset <= '0';
+        rst <= '0';
         enable <= '1';
         for i in 0 to results - 1 loop
             wait until rising_edge(clk);
-            assert result = ref_result(i) report "Incorrect result" severity warning;
+            if result /= ref_result(i) then
+                report "Incorrect result for i=" & integer'image(i) severity warning;
+                errors := errors + 1;
+            end if;
         end loop;
+        report "Test complete, number of errors: " & integer'image(errors) severity note;
         run <= false;
         wait;
     end process;

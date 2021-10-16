@@ -14,7 +14,7 @@ entity xormix16 is
         
         -- clock and synchronous reset
         clk    : in std_logic;
-        reset  : in std_logic;
+        rst    : in std_logic;
         
         -- configuration
         seed_x : in std_logic_vector(15 downto 0);
@@ -31,10 +31,10 @@ architecture rtl of xormix16 is
     
     type salts_t is array(0 to 15) of std_logic_vector(15 downto 0);
     constant salts : salts_t := (
-        X"d2ba", X"bc36", X"16a6", X"e3eb",
-        X"b749", X"5bc4", X"09f7", X"f491",
-        X"5e28", X"2d5a", X"da5d", X"2cab",
-        X"4058", X"7547", X"e94c", X"0a05"
+        x"d2ba", x"bc36", x"16a6", x"e3eb",
+        x"b749", x"5bc4", x"09f7", x"f491",
+        x"5e28", x"2d5a", x"da5d", x"2cab",
+        x"4058", x"7547", x"e94c", x"0a05"
     );
     
     signal r_state_x : std_logic_vector(15 downto 0);
@@ -54,7 +54,7 @@ begin
         
     begin
         if rising_edge(clk) then
-            if reset = '1' then
+            if rst = '1' then
                 
                 r_state_x <= seed_x;
                 r_state_y <= seed_y;

@@ -11,7 +11,7 @@ module xormix96
         
         // clock and synchronous reset
         input wire clk,
-        input wire reset,
+        input wire rst,
         
         // configuration
         input wire [95 : 0] seed_x,
@@ -69,115 +69,115 @@ module xormix96
         for (i = 0; i < streams; i = i + 1) begin
             v_mixin = r_state_x ^ salts[96 * i +: 96];
             v_mixup = r_state_y[96 * ((i + 1) % streams) +: 96];
-            v_res[ 0] = v_mixup[ 0] ^ (v_mixup[42] & ~v_mixup[46]) ^ v_mixup[35] ^ v_mixup[43] ^ v_mixin[(i + 50) % 96];
-            v_res[ 1] = v_mixup[ 1] ^ (v_mixup[43] & ~v_mixup[47]) ^ v_mixup[36] ^ v_mixup[44] ^ v_mixin[(i + 20) % 96];
-            v_res[ 2] = v_mixup[ 2] ^ (v_mixup[44] & ~v_mixup[48]) ^ v_mixup[37] ^ v_mixup[45] ^ v_mixin[(i + 91) % 96];
-            v_res[ 3] = v_mixup[ 3] ^ (v_mixup[45] & ~v_mixup[49]) ^ v_mixup[38] ^ v_mixup[46] ^ v_mixin[(i + 59) % 96];
-            v_res[ 4] = v_mixup[ 4] ^ (v_mixup[46] & ~v_mixup[50]) ^ v_mixup[39] ^ v_mixup[47] ^ v_mixin[(i + 26) % 96];
-            v_res[ 5] = v_mixup[ 5] ^ (v_mixup[47] & ~v_mixup[51]) ^ v_mixup[40] ^ v_mixup[48] ^ v_mixin[(i +  4) % 96];
-            v_res[ 6] = v_mixup[ 6] ^ (v_mixup[48] & ~v_mixup[52]) ^ v_mixup[41] ^ v_mixup[49] ^ v_mixin[(i + 58) % 96];
-            v_res[ 7] = v_mixup[ 7] ^ (v_mixup[49] & ~v_mixup[53]) ^ v_mixup[42] ^ v_mixup[50] ^ v_mixin[(i + 25) % 96];
-            v_res[ 8] = v_mixup[ 8] ^ (v_mixup[50] & ~v_mixup[54]) ^ v_mixup[43] ^ v_mixup[51] ^ v_mixin[(i + 71) % 96];
-            v_res[ 9] = v_mixup[ 9] ^ (v_mixup[51] & ~v_mixup[55]) ^ v_mixup[44] ^ v_mixup[52] ^ v_mixin[(i + 77) % 96];
-            v_res[10] = v_mixup[10] ^ (v_mixup[52] & ~v_mixup[56]) ^ v_mixup[45] ^ v_mixup[53] ^ v_mixin[(i + 13) % 96];
-            v_res[11] = v_mixup[11] ^ (v_mixup[53] & ~v_mixup[57]) ^ v_mixup[46] ^ v_mixup[54] ^ v_mixin[(i +  2) % 96];
-            v_res[12] = v_mixup[12] ^ (v_mixup[54] & ~v_mixup[58]) ^ v_mixup[47] ^ v_mixup[55] ^ v_mixin[(i + 30) % 96];
-            v_res[13] = v_mixup[13] ^ (v_mixup[55] & ~v_mixup[59]) ^ v_mixup[48] ^ v_mixup[56] ^ v_mixin[(i + 72) % 96];
-            v_res[14] = v_mixup[14] ^ (v_mixup[56] & ~v_mixup[60]) ^ v_mixup[49] ^ v_mixup[57] ^ v_mixin[(i + 11) % 96];
-            v_res[15] = v_mixup[15] ^ (v_mixup[57] & ~v_mixup[61]) ^ v_mixup[50] ^ v_mixup[58] ^ v_mixin[(i + 15) % 96];
-            v_res[16] = v_mixup[16] ^ (v_mixup[58] & ~v_mixup[62]) ^ v_mixup[51] ^ v_mixup[59] ^ v_mixin[(i + 45) % 96];
-            v_res[17] = v_mixup[17] ^ (v_mixup[59] & ~v_mixup[63]) ^ v_mixup[52] ^ v_mixup[60] ^ v_mixin[(i + 61) % 96];
-            v_res[18] = v_mixup[18] ^ (v_mixup[60] & ~v_mixup[64]) ^ v_mixup[53] ^ v_mixup[61] ^ v_mixin[(i + 80) % 96];
-            v_res[19] = v_mixup[19] ^ (v_mixup[61] & ~v_mixup[65]) ^ v_mixup[54] ^ v_mixup[62] ^ v_mixin[(i + 19) % 96];
-            v_res[20] = v_mixup[20] ^ (v_mixup[62] & ~v_mixup[66]) ^ v_mixup[55] ^ v_mixup[63] ^ v_mixin[(i + 33) % 96];
-            v_res[21] = v_mixup[21] ^ (v_mixup[63] & ~v_mixup[67]) ^ v_mixup[56] ^ v_mixup[64] ^ v_mixin[(i + 35) % 96];
-            v_res[22] = v_mixup[22] ^ (v_mixup[64] & ~v_mixup[68]) ^ v_mixup[57] ^ v_mixup[65] ^ v_mixin[(i + 62) % 96];
-            v_res[23] = v_mixup[23] ^ (v_mixup[65] & ~v_mixup[69]) ^ v_mixup[58] ^ v_mixup[66] ^ v_mixin[(i +  1) % 96];
-            v_res[24] = v_mixup[24] ^ (v_mixup[66] & ~v_mixup[70]) ^ v_mixup[59] ^ v_mixup[67] ^ v_mixin[(i + 74) % 96];
-            v_res[25] = v_mixup[25] ^ (v_mixup[67] & ~v_mixup[71]) ^ v_mixup[60] ^ v_mixup[68] ^ v_mixin[(i + 18) % 96];
-            v_res[26] = v_mixup[26] ^ (v_mixup[68] & ~v_mixup[72]) ^ v_mixup[61] ^ v_mixup[69] ^ v_mixin[(i + 90) % 96];
-            v_res[27] = v_mixup[27] ^ (v_mixup[69] & ~v_mixup[73]) ^ v_mixup[62] ^ v_mixup[70] ^ v_mixin[(i + 66) % 96];
-            v_res[28] = v_mixup[28] ^ (v_mixup[70] & ~v_mixup[74]) ^ v_mixup[63] ^ v_mixup[71] ^ v_mixin[(i + 67) % 96];
-            v_res[29] = v_mixup[29] ^ (v_mixup[71] & ~v_mixup[75]) ^ v_mixup[64] ^ v_mixup[72] ^ v_mixin[(i + 88) % 96];
-            v_res[30] = v_mixup[30] ^ (v_mixup[72] & ~v_mixup[76]) ^ v_mixup[65] ^ v_mixup[73] ^ v_mixin[(i + 28) % 96];
-            v_res[31] = v_mixup[31] ^ (v_mixup[73] & ~v_mixup[77]) ^ v_mixup[66] ^ v_mixup[74] ^ v_mixin[(i + 53) % 96];
-            v_res[32] = v_mixup[32] ^ (v_mixup[74] & ~v_mixup[78]) ^ v_mixup[67] ^ v_mixup[75] ^ v_mixin[(i + 23) % 96];
-            v_res[33] = v_mixup[33] ^ (v_mixup[75] & ~v_mixup[79]) ^ v_mixup[68] ^ v_mixup[76] ^ v_mixin[(i + 94) % 96];
-            v_res[34] = v_mixup[34] ^ (v_mixup[76] & ~v_mixup[80]) ^ v_mixup[69] ^ v_mixup[77] ^ v_mixin[(i + 55) % 96];
-            v_res[35] = v_mixup[35] ^ (v_mixup[77] & ~v_mixup[81]) ^ v_mixup[70] ^ v_mixup[78] ^ v_mixin[(i + 37) % 96];
-            v_res[36] = v_mixup[36] ^ (v_mixup[78] & ~v_mixup[82]) ^ v_mixup[71] ^ v_mixup[79] ^ v_mixin[(i + 34) % 96];
-            v_res[37] = v_mixup[37] ^ (v_mixup[79] & ~v_mixup[83]) ^ v_mixup[72] ^ v_mixup[80] ^ v_mixin[(i + 24) % 96];
-            v_res[38] = v_mixup[38] ^ (v_mixup[80] & ~v_mixup[84]) ^ v_mixup[73] ^ v_mixup[81] ^ v_mixin[(i + 65) % 96];
-            v_res[39] = v_mixup[39] ^ (v_mixup[81] & ~v_mixup[85]) ^ v_mixup[74] ^ v_mixup[82] ^ v_mixin[(i + 46) % 96];
-            v_res[40] = v_mixup[40] ^ (v_mixup[82] & ~v_mixup[86]) ^ v_mixup[75] ^ v_mixup[83] ^ v_mixin[(i + 32) % 96];
-            v_res[41] = v_mixup[41] ^ (v_mixup[83] & ~v_mixup[87]) ^ v_mixup[76] ^ v_mixup[84] ^ v_mixin[(i + 84) % 96];
-            v_res[42] = v_mixup[42] ^ (v_mixup[84] & ~v_mixup[88]) ^ v_mixup[77] ^ v_mixup[85] ^ v_mixin[(i + 79) % 96];
-            v_res[43] = v_mixup[43] ^ (v_mixup[85] & ~v_mixup[89]) ^ v_mixup[78] ^ v_mixup[86] ^ v_mixin[(i + 48) % 96];
-            v_res[44] = v_mixup[44] ^ (v_mixup[86] & ~v_mixup[90]) ^ v_mixup[79] ^ v_mixup[87] ^ v_mixin[(i + 92) % 96];
-            v_res[45] = v_mixup[45] ^ (v_mixup[87] & ~v_mixup[91]) ^ v_mixup[80] ^ v_mixup[88] ^ v_mixin[(i + 57) % 96];
-            v_res[46] = v_mixup[46] ^ (v_mixup[88] & ~v_mixup[92]) ^ v_mixup[81] ^ v_mixup[89] ^ v_mixin[(i + 41) % 96];
-            v_res[47] = v_mixup[47] ^ (v_mixup[89] & ~v_mixup[93]) ^ v_mixup[82] ^ v_mixup[90] ^ v_mixin[(i + 27) % 96];
+            v_res[ 0] = v_mixup[ 0] ^ (v_mixup[45] & ~v_mixup[46]) ^ v_mixup[36] ^ v_mixup[43] ^ v_mixin[(i + 50) % 96];
+            v_res[ 1] = v_mixup[ 1] ^ (v_mixup[46] & ~v_mixup[47]) ^ v_mixup[37] ^ v_mixup[44] ^ v_mixin[(i + 20) % 96];
+            v_res[ 2] = v_mixup[ 2] ^ (v_mixup[47] & ~v_mixup[48]) ^ v_mixup[38] ^ v_mixup[45] ^ v_mixin[(i + 91) % 96];
+            v_res[ 3] = v_mixup[ 3] ^ (v_mixup[48] & ~v_mixup[49]) ^ v_mixup[39] ^ v_mixup[46] ^ v_mixin[(i + 59) % 96];
+            v_res[ 4] = v_mixup[ 4] ^ (v_mixup[49] & ~v_mixup[50]) ^ v_mixup[40] ^ v_mixup[47] ^ v_mixin[(i + 26) % 96];
+            v_res[ 5] = v_mixup[ 5] ^ (v_mixup[50] & ~v_mixup[51]) ^ v_mixup[41] ^ v_mixup[48] ^ v_mixin[(i +  4) % 96];
+            v_res[ 6] = v_mixup[ 6] ^ (v_mixup[51] & ~v_mixup[52]) ^ v_mixup[42] ^ v_mixup[49] ^ v_mixin[(i + 58) % 96];
+            v_res[ 7] = v_mixup[ 7] ^ (v_mixup[52] & ~v_mixup[53]) ^ v_mixup[43] ^ v_mixup[50] ^ v_mixin[(i + 25) % 96];
+            v_res[ 8] = v_mixup[ 8] ^ (v_mixup[53] & ~v_mixup[54]) ^ v_mixup[44] ^ v_mixup[51] ^ v_mixin[(i + 71) % 96];
+            v_res[ 9] = v_mixup[ 9] ^ (v_mixup[54] & ~v_mixup[55]) ^ v_mixup[45] ^ v_mixup[52] ^ v_mixin[(i + 77) % 96];
+            v_res[10] = v_mixup[10] ^ (v_mixup[55] & ~v_mixup[56]) ^ v_mixup[46] ^ v_mixup[53] ^ v_mixin[(i + 13) % 96];
+            v_res[11] = v_mixup[11] ^ (v_mixup[56] & ~v_mixup[57]) ^ v_mixup[47] ^ v_mixup[54] ^ v_mixin[(i +  2) % 96];
+            v_res[12] = v_mixup[12] ^ (v_mixup[57] & ~v_mixup[58]) ^ v_mixup[48] ^ v_mixup[55] ^ v_mixin[(i + 30) % 96];
+            v_res[13] = v_mixup[13] ^ (v_mixup[58] & ~v_mixup[59]) ^ v_mixup[49] ^ v_mixup[56] ^ v_mixin[(i + 72) % 96];
+            v_res[14] = v_mixup[14] ^ (v_mixup[59] & ~v_mixup[60]) ^ v_mixup[50] ^ v_mixup[57] ^ v_mixin[(i + 11) % 96];
+            v_res[15] = v_mixup[15] ^ (v_mixup[60] & ~v_mixup[61]) ^ v_mixup[51] ^ v_mixup[58] ^ v_mixin[(i + 15) % 96];
+            v_res[16] = v_mixup[16] ^ (v_mixup[61] & ~v_mixup[62]) ^ v_mixup[52] ^ v_mixup[59] ^ v_mixin[(i + 45) % 96];
+            v_res[17] = v_mixup[17] ^ (v_mixup[62] & ~v_mixup[63]) ^ v_mixup[53] ^ v_mixup[60] ^ v_mixin[(i + 61) % 96];
+            v_res[18] = v_mixup[18] ^ (v_mixup[63] & ~v_mixup[64]) ^ v_mixup[54] ^ v_mixup[61] ^ v_mixin[(i + 80) % 96];
+            v_res[19] = v_mixup[19] ^ (v_mixup[64] & ~v_mixup[65]) ^ v_mixup[55] ^ v_mixup[62] ^ v_mixin[(i + 19) % 96];
+            v_res[20] = v_mixup[20] ^ (v_mixup[65] & ~v_mixup[66]) ^ v_mixup[56] ^ v_mixup[63] ^ v_mixin[(i + 33) % 96];
+            v_res[21] = v_mixup[21] ^ (v_mixup[66] & ~v_mixup[67]) ^ v_mixup[57] ^ v_mixup[64] ^ v_mixin[(i + 35) % 96];
+            v_res[22] = v_mixup[22] ^ (v_mixup[67] & ~v_mixup[68]) ^ v_mixup[58] ^ v_mixup[65] ^ v_mixin[(i + 62) % 96];
+            v_res[23] = v_mixup[23] ^ (v_mixup[68] & ~v_mixup[69]) ^ v_mixup[59] ^ v_mixup[66] ^ v_mixin[(i +  1) % 96];
+            v_res[24] = v_mixup[24] ^ (v_mixup[69] & ~v_mixup[70]) ^ v_mixup[60] ^ v_mixup[67] ^ v_mixin[(i + 74) % 96];
+            v_res[25] = v_mixup[25] ^ (v_mixup[70] & ~v_mixup[71]) ^ v_mixup[61] ^ v_mixup[68] ^ v_mixin[(i + 18) % 96];
+            v_res[26] = v_mixup[26] ^ (v_mixup[71] & ~v_mixup[72]) ^ v_mixup[62] ^ v_mixup[69] ^ v_mixin[(i + 90) % 96];
+            v_res[27] = v_mixup[27] ^ (v_mixup[72] & ~v_mixup[73]) ^ v_mixup[63] ^ v_mixup[70] ^ v_mixin[(i + 66) % 96];
+            v_res[28] = v_mixup[28] ^ (v_mixup[73] & ~v_mixup[74]) ^ v_mixup[64] ^ v_mixup[71] ^ v_mixin[(i + 67) % 96];
+            v_res[29] = v_mixup[29] ^ (v_mixup[74] & ~v_mixup[75]) ^ v_mixup[65] ^ v_mixup[72] ^ v_mixin[(i + 88) % 96];
+            v_res[30] = v_mixup[30] ^ (v_mixup[75] & ~v_mixup[76]) ^ v_mixup[66] ^ v_mixup[73] ^ v_mixin[(i + 28) % 96];
+            v_res[31] = v_mixup[31] ^ (v_mixup[76] & ~v_mixup[77]) ^ v_mixup[67] ^ v_mixup[74] ^ v_mixin[(i + 53) % 96];
+            v_res[32] = v_mixup[32] ^ (v_mixup[77] & ~v_mixup[78]) ^ v_mixup[68] ^ v_mixup[75] ^ v_mixin[(i + 23) % 96];
+            v_res[33] = v_mixup[33] ^ (v_mixup[78] & ~v_mixup[79]) ^ v_mixup[69] ^ v_mixup[76] ^ v_mixin[(i + 94) % 96];
+            v_res[34] = v_mixup[34] ^ (v_mixup[79] & ~v_mixup[80]) ^ v_mixup[70] ^ v_mixup[77] ^ v_mixin[(i + 55) % 96];
+            v_res[35] = v_mixup[35] ^ (v_mixup[80] & ~v_mixup[81]) ^ v_mixup[71] ^ v_mixup[78] ^ v_mixin[(i + 37) % 96];
+            v_res[36] = v_mixup[36] ^ (v_mixup[81] & ~v_mixup[82]) ^ v_mixup[72] ^ v_mixup[79] ^ v_mixin[(i + 34) % 96];
+            v_res[37] = v_mixup[37] ^ (v_mixup[82] & ~v_mixup[83]) ^ v_mixup[73] ^ v_mixup[80] ^ v_mixin[(i + 24) % 96];
+            v_res[38] = v_mixup[38] ^ (v_mixup[83] & ~v_mixup[84]) ^ v_mixup[74] ^ v_mixup[81] ^ v_mixin[(i + 65) % 96];
+            v_res[39] = v_mixup[39] ^ (v_mixup[84] & ~v_mixup[85]) ^ v_mixup[75] ^ v_mixup[82] ^ v_mixin[(i + 46) % 96];
+            v_res[40] = v_mixup[40] ^ (v_mixup[85] & ~v_mixup[86]) ^ v_mixup[76] ^ v_mixup[83] ^ v_mixin[(i + 32) % 96];
+            v_res[41] = v_mixup[41] ^ (v_mixup[86] & ~v_mixup[87]) ^ v_mixup[77] ^ v_mixup[84] ^ v_mixin[(i + 84) % 96];
+            v_res[42] = v_mixup[42] ^ (v_mixup[87] & ~v_mixup[88]) ^ v_mixup[78] ^ v_mixup[85] ^ v_mixin[(i + 79) % 96];
+            v_res[43] = v_mixup[43] ^ (v_mixup[88] & ~v_mixup[89]) ^ v_mixup[79] ^ v_mixup[86] ^ v_mixin[(i + 48) % 96];
+            v_res[44] = v_mixup[44] ^ (v_mixup[89] & ~v_mixup[90]) ^ v_mixup[80] ^ v_mixup[87] ^ v_mixin[(i + 92) % 96];
+            v_res[45] = v_mixup[45] ^ (v_mixup[90] & ~v_mixup[91]) ^ v_mixup[81] ^ v_mixup[88] ^ v_mixin[(i + 57) % 96];
+            v_res[46] = v_mixup[46] ^ (v_mixup[91] & ~v_mixup[92]) ^ v_mixup[82] ^ v_mixup[89] ^ v_mixin[(i + 41) % 96];
+            v_res[47] = v_mixup[47] ^ (v_mixup[92] & ~v_mixup[93]) ^ v_mixup[83] ^ v_mixup[90] ^ v_mixin[(i + 27) % 96];
             v_state_y1[96 * i +: 96] = {v_res, r_state_y[96 * i + 48 +: 48]};
         end
         
         for (i = 0; i < streams; i = i + 1) begin
             v_mixin = r_state_x ^ salts[96 * i +: 96];
             v_mixup = v_state_y1[96 * ((i + 1) % streams) +: 96];
-            v_res[ 0] = v_mixup[ 0] ^ (v_mixup[42] & ~v_mixup[46]) ^ v_mixup[35] ^ v_mixup[43] ^ v_mixin[(i + 64) % 96];
-            v_res[ 1] = v_mixup[ 1] ^ (v_mixup[43] & ~v_mixup[47]) ^ v_mixup[36] ^ v_mixup[44] ^ v_mixin[(i + 95) % 96];
-            v_res[ 2] = v_mixup[ 2] ^ (v_mixup[44] & ~v_mixup[48]) ^ v_mixup[37] ^ v_mixup[45] ^ v_mixin[(i + 70) % 96];
-            v_res[ 3] = v_mixup[ 3] ^ (v_mixup[45] & ~v_mixup[49]) ^ v_mixup[38] ^ v_mixup[46] ^ v_mixin[(i +  6) % 96];
-            v_res[ 4] = v_mixup[ 4] ^ (v_mixup[46] & ~v_mixup[50]) ^ v_mixup[39] ^ v_mixup[47] ^ v_mixin[(i + 93) % 96];
-            v_res[ 5] = v_mixup[ 5] ^ (v_mixup[47] & ~v_mixup[51]) ^ v_mixup[40] ^ v_mixup[48] ^ v_mixin[(i + 21) % 96];
-            v_res[ 6] = v_mixup[ 6] ^ (v_mixup[48] & ~v_mixup[52]) ^ v_mixup[41] ^ v_mixup[49] ^ v_mixin[(i + 76) % 96];
-            v_res[ 7] = v_mixup[ 7] ^ (v_mixup[49] & ~v_mixup[53]) ^ v_mixup[42] ^ v_mixup[50] ^ v_mixin[(i + 85) % 96];
-            v_res[ 8] = v_mixup[ 8] ^ (v_mixup[50] & ~v_mixup[54]) ^ v_mixup[43] ^ v_mixup[51] ^ v_mixin[(i + 40) % 96];
-            v_res[ 9] = v_mixup[ 9] ^ (v_mixup[51] & ~v_mixup[55]) ^ v_mixup[44] ^ v_mixup[52] ^ v_mixin[(i + 83) % 96];
-            v_res[10] = v_mixup[10] ^ (v_mixup[52] & ~v_mixup[56]) ^ v_mixup[45] ^ v_mixup[53] ^ v_mixin[(i + 56) % 96];
-            v_res[11] = v_mixup[11] ^ (v_mixup[53] & ~v_mixup[57]) ^ v_mixup[46] ^ v_mixup[54] ^ v_mixin[(i + 29) % 96];
-            v_res[12] = v_mixup[12] ^ (v_mixup[54] & ~v_mixup[58]) ^ v_mixup[47] ^ v_mixup[55] ^ v_mixin[(i + 12) % 96];
-            v_res[13] = v_mixup[13] ^ (v_mixup[55] & ~v_mixup[59]) ^ v_mixup[48] ^ v_mixup[56] ^ v_mixin[(i +  9) % 96];
-            v_res[14] = v_mixup[14] ^ (v_mixup[56] & ~v_mixup[60]) ^ v_mixup[49] ^ v_mixup[57] ^ v_mixin[(i + 68) % 96];
-            v_res[15] = v_mixup[15] ^ (v_mixup[57] & ~v_mixup[61]) ^ v_mixup[50] ^ v_mixup[58] ^ v_mixin[(i + 73) % 96];
-            v_res[16] = v_mixup[16] ^ (v_mixup[58] & ~v_mixup[62]) ^ v_mixup[51] ^ v_mixup[59] ^ v_mixin[(i + 78) % 96];
-            v_res[17] = v_mixup[17] ^ (v_mixup[59] & ~v_mixup[63]) ^ v_mixup[52] ^ v_mixup[60] ^ v_mixin[(i + 69) % 96];
-            v_res[18] = v_mixup[18] ^ (v_mixup[60] & ~v_mixup[64]) ^ v_mixup[53] ^ v_mixup[61] ^ v_mixin[(i + 22) % 96];
-            v_res[19] = v_mixup[19] ^ (v_mixup[61] & ~v_mixup[65]) ^ v_mixup[54] ^ v_mixup[62] ^ v_mixin[(i + 47) % 96];
-            v_res[20] = v_mixup[20] ^ (v_mixup[62] & ~v_mixup[66]) ^ v_mixup[55] ^ v_mixup[63] ^ v_mixin[(i + 42) % 96];
-            v_res[21] = v_mixup[21] ^ (v_mixup[63] & ~v_mixup[67]) ^ v_mixup[56] ^ v_mixup[64] ^ v_mixin[(i + 82) % 96];
-            v_res[22] = v_mixup[22] ^ (v_mixup[64] & ~v_mixup[68]) ^ v_mixup[57] ^ v_mixup[65] ^ v_mixin[(i + 44) % 96];
-            v_res[23] = v_mixup[23] ^ (v_mixup[65] & ~v_mixup[69]) ^ v_mixup[58] ^ v_mixup[66] ^ v_mixin[(i + 54) % 96];
-            v_res[24] = v_mixup[24] ^ (v_mixup[66] & ~v_mixup[70]) ^ v_mixup[59] ^ v_mixup[67] ^ v_mixin[(i + 36) % 96];
-            v_res[25] = v_mixup[25] ^ (v_mixup[67] & ~v_mixup[71]) ^ v_mixup[60] ^ v_mixup[68] ^ v_mixin[(i +  5) % 96];
-            v_res[26] = v_mixup[26] ^ (v_mixup[68] & ~v_mixup[72]) ^ v_mixup[61] ^ v_mixup[69] ^ v_mixin[(i +  3) % 96];
-            v_res[27] = v_mixup[27] ^ (v_mixup[69] & ~v_mixup[73]) ^ v_mixup[62] ^ v_mixup[70] ^ v_mixin[(i + 63) % 96];
-            v_res[28] = v_mixup[28] ^ (v_mixup[70] & ~v_mixup[74]) ^ v_mixup[63] ^ v_mixup[71] ^ v_mixin[(i + 31) % 96];
-            v_res[29] = v_mixup[29] ^ (v_mixup[71] & ~v_mixup[75]) ^ v_mixup[64] ^ v_mixup[72] ^ v_mixin[(i + 16) % 96];
-            v_res[30] = v_mixup[30] ^ (v_mixup[72] & ~v_mixup[76]) ^ v_mixup[65] ^ v_mixup[73] ^ v_mixin[(i + 87) % 96];
-            v_res[31] = v_mixup[31] ^ (v_mixup[73] & ~v_mixup[77]) ^ v_mixup[66] ^ v_mixup[74] ^ v_mixin[(i + 38) % 96];
-            v_res[32] = v_mixup[32] ^ (v_mixup[74] & ~v_mixup[78]) ^ v_mixup[67] ^ v_mixup[75] ^ v_mixin[(i + 10) % 96];
-            v_res[33] = v_mixup[33] ^ (v_mixup[75] & ~v_mixup[79]) ^ v_mixup[68] ^ v_mixup[76] ^ v_mixin[(i + 81) % 96];
-            v_res[34] = v_mixup[34] ^ (v_mixup[76] & ~v_mixup[80]) ^ v_mixup[69] ^ v_mixup[77] ^ v_mixin[(i + 60) % 96];
-            v_res[35] = v_mixup[35] ^ (v_mixup[77] & ~v_mixup[81]) ^ v_mixup[70] ^ v_mixup[78] ^ v_mixin[(i + 51) % 96];
-            v_res[36] = v_mixup[36] ^ (v_mixup[78] & ~v_mixup[82]) ^ v_mixup[71] ^ v_mixup[79] ^ v_mixin[(i + 43) % 96];
-            v_res[37] = v_mixup[37] ^ (v_mixup[79] & ~v_mixup[83]) ^ v_mixup[72] ^ v_mixup[80] ^ v_mixin[(i + 75) % 96];
-            v_res[38] = v_mixup[38] ^ (v_mixup[80] & ~v_mixup[84]) ^ v_mixup[73] ^ v_mixup[81] ^ v_mixin[(i +  8) % 96];
-            v_res[39] = v_mixup[39] ^ (v_mixup[81] & ~v_mixup[85]) ^ v_mixup[74] ^ v_mixup[82] ^ v_mixin[(i + 89) % 96];
-            v_res[40] = v_mixup[40] ^ (v_mixup[82] & ~v_mixup[86]) ^ v_mixup[75] ^ v_mixup[83] ^ v_mixin[(i + 39) % 96];
-            v_res[41] = v_mixup[41] ^ (v_mixup[83] & ~v_mixup[87]) ^ v_mixup[76] ^ v_mixup[84] ^ v_mixin[(i + 86) % 96];
-            v_res[42] = v_mixup[42] ^ (v_mixup[84] & ~v_mixup[88]) ^ v_mixup[77] ^ v_mixup[85] ^ v_mixin[(i + 14) % 96];
-            v_res[43] = v_mixup[43] ^ (v_mixup[85] & ~v_mixup[89]) ^ v_mixup[78] ^ v_mixup[86] ^ v_mixin[(i +  7) % 96];
-            v_res[44] = v_mixup[44] ^ (v_mixup[86] & ~v_mixup[90]) ^ v_mixup[79] ^ v_mixup[87] ^ v_mixin[(i + 52) % 96];
-            v_res[45] = v_mixup[45] ^ (v_mixup[87] & ~v_mixup[91]) ^ v_mixup[80] ^ v_mixup[88] ^ v_mixin[(i +  0) % 96];
-            v_res[46] = v_mixup[46] ^ (v_mixup[88] & ~v_mixup[92]) ^ v_mixup[81] ^ v_mixup[89] ^ v_mixin[(i + 49) % 96];
-            v_res[47] = v_mixup[47] ^ (v_mixup[89] & ~v_mixup[93]) ^ v_mixup[82] ^ v_mixup[90] ^ v_mixin[(i + 17) % 96];
+            v_res[ 0] = v_mixup[ 0] ^ (v_mixup[45] & ~v_mixup[46]) ^ v_mixup[36] ^ v_mixup[43] ^ v_mixin[(i + 64) % 96];
+            v_res[ 1] = v_mixup[ 1] ^ (v_mixup[46] & ~v_mixup[47]) ^ v_mixup[37] ^ v_mixup[44] ^ v_mixin[(i + 95) % 96];
+            v_res[ 2] = v_mixup[ 2] ^ (v_mixup[47] & ~v_mixup[48]) ^ v_mixup[38] ^ v_mixup[45] ^ v_mixin[(i + 70) % 96];
+            v_res[ 3] = v_mixup[ 3] ^ (v_mixup[48] & ~v_mixup[49]) ^ v_mixup[39] ^ v_mixup[46] ^ v_mixin[(i +  6) % 96];
+            v_res[ 4] = v_mixup[ 4] ^ (v_mixup[49] & ~v_mixup[50]) ^ v_mixup[40] ^ v_mixup[47] ^ v_mixin[(i + 93) % 96];
+            v_res[ 5] = v_mixup[ 5] ^ (v_mixup[50] & ~v_mixup[51]) ^ v_mixup[41] ^ v_mixup[48] ^ v_mixin[(i + 21) % 96];
+            v_res[ 6] = v_mixup[ 6] ^ (v_mixup[51] & ~v_mixup[52]) ^ v_mixup[42] ^ v_mixup[49] ^ v_mixin[(i + 76) % 96];
+            v_res[ 7] = v_mixup[ 7] ^ (v_mixup[52] & ~v_mixup[53]) ^ v_mixup[43] ^ v_mixup[50] ^ v_mixin[(i + 85) % 96];
+            v_res[ 8] = v_mixup[ 8] ^ (v_mixup[53] & ~v_mixup[54]) ^ v_mixup[44] ^ v_mixup[51] ^ v_mixin[(i + 40) % 96];
+            v_res[ 9] = v_mixup[ 9] ^ (v_mixup[54] & ~v_mixup[55]) ^ v_mixup[45] ^ v_mixup[52] ^ v_mixin[(i + 83) % 96];
+            v_res[10] = v_mixup[10] ^ (v_mixup[55] & ~v_mixup[56]) ^ v_mixup[46] ^ v_mixup[53] ^ v_mixin[(i + 56) % 96];
+            v_res[11] = v_mixup[11] ^ (v_mixup[56] & ~v_mixup[57]) ^ v_mixup[47] ^ v_mixup[54] ^ v_mixin[(i + 29) % 96];
+            v_res[12] = v_mixup[12] ^ (v_mixup[57] & ~v_mixup[58]) ^ v_mixup[48] ^ v_mixup[55] ^ v_mixin[(i + 12) % 96];
+            v_res[13] = v_mixup[13] ^ (v_mixup[58] & ~v_mixup[59]) ^ v_mixup[49] ^ v_mixup[56] ^ v_mixin[(i +  9) % 96];
+            v_res[14] = v_mixup[14] ^ (v_mixup[59] & ~v_mixup[60]) ^ v_mixup[50] ^ v_mixup[57] ^ v_mixin[(i + 68) % 96];
+            v_res[15] = v_mixup[15] ^ (v_mixup[60] & ~v_mixup[61]) ^ v_mixup[51] ^ v_mixup[58] ^ v_mixin[(i + 73) % 96];
+            v_res[16] = v_mixup[16] ^ (v_mixup[61] & ~v_mixup[62]) ^ v_mixup[52] ^ v_mixup[59] ^ v_mixin[(i + 78) % 96];
+            v_res[17] = v_mixup[17] ^ (v_mixup[62] & ~v_mixup[63]) ^ v_mixup[53] ^ v_mixup[60] ^ v_mixin[(i + 69) % 96];
+            v_res[18] = v_mixup[18] ^ (v_mixup[63] & ~v_mixup[64]) ^ v_mixup[54] ^ v_mixup[61] ^ v_mixin[(i + 22) % 96];
+            v_res[19] = v_mixup[19] ^ (v_mixup[64] & ~v_mixup[65]) ^ v_mixup[55] ^ v_mixup[62] ^ v_mixin[(i + 47) % 96];
+            v_res[20] = v_mixup[20] ^ (v_mixup[65] & ~v_mixup[66]) ^ v_mixup[56] ^ v_mixup[63] ^ v_mixin[(i + 42) % 96];
+            v_res[21] = v_mixup[21] ^ (v_mixup[66] & ~v_mixup[67]) ^ v_mixup[57] ^ v_mixup[64] ^ v_mixin[(i + 82) % 96];
+            v_res[22] = v_mixup[22] ^ (v_mixup[67] & ~v_mixup[68]) ^ v_mixup[58] ^ v_mixup[65] ^ v_mixin[(i + 44) % 96];
+            v_res[23] = v_mixup[23] ^ (v_mixup[68] & ~v_mixup[69]) ^ v_mixup[59] ^ v_mixup[66] ^ v_mixin[(i + 54) % 96];
+            v_res[24] = v_mixup[24] ^ (v_mixup[69] & ~v_mixup[70]) ^ v_mixup[60] ^ v_mixup[67] ^ v_mixin[(i + 36) % 96];
+            v_res[25] = v_mixup[25] ^ (v_mixup[70] & ~v_mixup[71]) ^ v_mixup[61] ^ v_mixup[68] ^ v_mixin[(i +  5) % 96];
+            v_res[26] = v_mixup[26] ^ (v_mixup[71] & ~v_mixup[72]) ^ v_mixup[62] ^ v_mixup[69] ^ v_mixin[(i +  3) % 96];
+            v_res[27] = v_mixup[27] ^ (v_mixup[72] & ~v_mixup[73]) ^ v_mixup[63] ^ v_mixup[70] ^ v_mixin[(i + 63) % 96];
+            v_res[28] = v_mixup[28] ^ (v_mixup[73] & ~v_mixup[74]) ^ v_mixup[64] ^ v_mixup[71] ^ v_mixin[(i + 31) % 96];
+            v_res[29] = v_mixup[29] ^ (v_mixup[74] & ~v_mixup[75]) ^ v_mixup[65] ^ v_mixup[72] ^ v_mixin[(i + 16) % 96];
+            v_res[30] = v_mixup[30] ^ (v_mixup[75] & ~v_mixup[76]) ^ v_mixup[66] ^ v_mixup[73] ^ v_mixin[(i + 87) % 96];
+            v_res[31] = v_mixup[31] ^ (v_mixup[76] & ~v_mixup[77]) ^ v_mixup[67] ^ v_mixup[74] ^ v_mixin[(i + 38) % 96];
+            v_res[32] = v_mixup[32] ^ (v_mixup[77] & ~v_mixup[78]) ^ v_mixup[68] ^ v_mixup[75] ^ v_mixin[(i + 10) % 96];
+            v_res[33] = v_mixup[33] ^ (v_mixup[78] & ~v_mixup[79]) ^ v_mixup[69] ^ v_mixup[76] ^ v_mixin[(i + 81) % 96];
+            v_res[34] = v_mixup[34] ^ (v_mixup[79] & ~v_mixup[80]) ^ v_mixup[70] ^ v_mixup[77] ^ v_mixin[(i + 60) % 96];
+            v_res[35] = v_mixup[35] ^ (v_mixup[80] & ~v_mixup[81]) ^ v_mixup[71] ^ v_mixup[78] ^ v_mixin[(i + 51) % 96];
+            v_res[36] = v_mixup[36] ^ (v_mixup[81] & ~v_mixup[82]) ^ v_mixup[72] ^ v_mixup[79] ^ v_mixin[(i + 43) % 96];
+            v_res[37] = v_mixup[37] ^ (v_mixup[82] & ~v_mixup[83]) ^ v_mixup[73] ^ v_mixup[80] ^ v_mixin[(i + 75) % 96];
+            v_res[38] = v_mixup[38] ^ (v_mixup[83] & ~v_mixup[84]) ^ v_mixup[74] ^ v_mixup[81] ^ v_mixin[(i +  8) % 96];
+            v_res[39] = v_mixup[39] ^ (v_mixup[84] & ~v_mixup[85]) ^ v_mixup[75] ^ v_mixup[82] ^ v_mixin[(i + 89) % 96];
+            v_res[40] = v_mixup[40] ^ (v_mixup[85] & ~v_mixup[86]) ^ v_mixup[76] ^ v_mixup[83] ^ v_mixin[(i + 39) % 96];
+            v_res[41] = v_mixup[41] ^ (v_mixup[86] & ~v_mixup[87]) ^ v_mixup[77] ^ v_mixup[84] ^ v_mixin[(i + 86) % 96];
+            v_res[42] = v_mixup[42] ^ (v_mixup[87] & ~v_mixup[88]) ^ v_mixup[78] ^ v_mixup[85] ^ v_mixin[(i + 14) % 96];
+            v_res[43] = v_mixup[43] ^ (v_mixup[88] & ~v_mixup[89]) ^ v_mixup[79] ^ v_mixup[86] ^ v_mixin[(i +  7) % 96];
+            v_res[44] = v_mixup[44] ^ (v_mixup[89] & ~v_mixup[90]) ^ v_mixup[80] ^ v_mixup[87] ^ v_mixin[(i + 52) % 96];
+            v_res[45] = v_mixup[45] ^ (v_mixup[90] & ~v_mixup[91]) ^ v_mixup[81] ^ v_mixup[88] ^ v_mixin[(i +  0) % 96];
+            v_res[46] = v_mixup[46] ^ (v_mixup[91] & ~v_mixup[92]) ^ v_mixup[82] ^ v_mixup[89] ^ v_mixin[(i + 49) % 96];
+            v_res[47] = v_mixup[47] ^ (v_mixup[92] & ~v_mixup[93]) ^ v_mixup[83] ^ v_mixup[90] ^ v_mixin[(i + 17) % 96];
             v_state_y2[96 * i +: 96] = {v_res, v_state_y1[96 * i + 48 +: 48]};
         end
         
     end
     
     always @(posedge clk) begin
-        if (reset == 1'b1) begin
+        if (rst == 1'b1) begin
             
             r_state_x <= seed_x;
             r_state_y <= seed_y;

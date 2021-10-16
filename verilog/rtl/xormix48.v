@@ -11,7 +11,7 @@ module xormix48
         
         // clock and synchronous reset
         input wire clk,
-        input wire reset,
+        input wire rst,
         
         // configuration
         input wire [47 : 0] seed_x,
@@ -117,7 +117,7 @@ module xormix48
     end
     
     always @(posedge clk) begin
-        if (reset == 1'b1) begin
+        if (rst == 1'b1) begin
             
             r_state_x <= seed_x;
             r_state_y <= seed_y;
