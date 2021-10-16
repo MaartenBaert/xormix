@@ -37,7 +37,9 @@ if(BUILD_TESTS)
 endif()
 
 if(BUILD_AVALANCHE)
+	
 	find_package(pybind11 REQUIRED)
+	
 	pybind11_add_module(xormix_avalanche
 		3rdparty/pcg.hpp
 		common/xormix.cpp
@@ -45,6 +47,15 @@ if(BUILD_AVALANCHE)
 		design/avalanche.cpp
 	)
 	target_include_directories(xormix_avalanche PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+	
+	pybind11_add_module(xormix_discrete_log
+		3rdparty/pcg.hpp
+		common/xormix.cpp
+		common/xormix.hpp
+		design/discrete_log.cpp
+	)
+	target_include_directories(xormix_discrete_log PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+	
 endif()
 
 feature_summary(WHAT ALL FATAL_ON_MISSING_REQUIRED_PACKAGES)
