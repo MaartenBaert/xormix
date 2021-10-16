@@ -3,6 +3,8 @@ Xormix Pseudorandom Number Generator
 
 Xormix is a family of pseudorandom number generators designed to produce high-quality output while being efficiently implementable in hardware, especially when large amounts of random bits are required each cycle. Xormix generators have an incremental cost of 5 logic gates and one flip-flop per output bit, which is comparable to the cost of a relatively sparse [LFSR](https://en.wikipedia.org/wiki/Linear-feedback_shift_register), but produces much higher quality output.
 
+*Important: xormix is still a work in progress and is subject to change.*
+
 Xormix variants
 ---------------
 
@@ -29,11 +31,11 @@ The properties of a xormix variant with word size N and number of streams S can 
 	number of 6-input LUTs (for FPGA) = (S + 1) * N
 	number of flip-flops = (S + 1) * N
 
-Algorithm
----------
+Documentation
+-------------
 
-TODO: link
-
+- [Xormix Algorithm](doc/algorithm.md)
+- [Xormix Design Criteria](doc/design-criteria.md)
 
 Implementations
 ---------------

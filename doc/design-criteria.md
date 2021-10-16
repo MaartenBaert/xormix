@@ -16,9 +16,9 @@ Before diving into the specific design decisions behind the xormix PRNG, I need 
 
 ### Software vs hardware cost
 
-There are many good open-source PRNGs available, however nearly all of these are optimized for software use rather than hardware use. This matters because the cost of some operations is dramatically different in software than in hardware, and unfortunately most good open-source PRNG designs rely on operations which are inefficient in hardware. For example, in software the cost of addition and multiplication is effectively the same on most modern processors, whereas in hardware the cost of an N-bit multiplication is approximately N times greater than the cost of an N-bit addition. That is unfortunate, because many good PRNGs rely heavily on multiplication.
+There are many good open-source PRNGs available, however nearly all of these are optimized for software use rather than hardware use. This matters because the cost of some operations is dramatically different in software than in hardware, and unfortunately most good open-source PRNG designs rely on operations which are inefficient in hardware. For example, in software the cost of addition and multiplication is effectively the same on most modern processors, whereas in hardware the cost of an `N`-bit multiplication is approximately `N` times greater than the cost of an `N`-bit addition. That is unfortunate, because many good PRNGs rely heavily on multiplication.
 
-In contrast, some operations which are very expensive in software are extremely cheap in hardware. For example, reordering the bits of an N-bit number in some arbitrary way is a very slow operation in software, because it can only be done using lots of bitshift and masking operations. However in hardware, bits are just wires, so reordering bits just means connecting the wires in a different order, which is practically free. We can take advantage of these types of operations to design PRNGs that are much more efficient in hardware.
+In contrast, some operations which are very expensive in software are extremely cheap in hardware. For example, reordering the bits of an `N`-bit number in some arbitrary way is a very slow operation in software, because it can only be done using lots of bitshift and masking operations. However in hardware, bits are just wires, so reordering bits just means connecting the wires in a different order, which is practically free. We can take advantage of these types of operations to design PRNGs that are much more efficient in hardware.
 
 There aren't that many publicly known hardware-optimized PRNGs. I'm sure that many designs exist, but the companies that develop them tend not to publish their designs. I am aware of only one popular publicly known PRNG that is efficient in hardware, and that is the classic [LFSR](https://en.wikipedia.org/wiki/Linear-feedback_shift_register). Although LFSRs have useful properties, they also have a number of issues that make them a poor choice for a general-purpose PRNG, which I will discuss later.
 
@@ -26,9 +26,9 @@ It is worth noting that there are several publicly known cryptographically secur
 
 ### State size vs logic complexity
 
-The state size of a PRNG is the number of bits of state that it needs to store. We typically want to keep the state size reasonably small, since storing more state is costly. However if we make the state too small, it will affect the quality of the PRNG output. If a PRNG has a state size of N bits, it has at most 2^N unique states, which means that after at most 2^N cycles, the PRNG will end up in a state it has been in before, and it will start repeating itself. At that point the output is clearly no longer random. The number of cycles it takes for the PRNG to start repeating itself is known as the period of the PRNG. We want this period to be as close as possible to the 2^N upper bound. If the period of a PRNG is much smaller than this upper bound, it suggests that the underlying design is flawed, or at least suboptimal.
+The state size of a PRNG is the number of bits of state that it needs to store. We typically want to keep the state size reasonably small, since storing more state is costly. However if we make the state too small, it will affect the quality of the PRNG output. If a PRNG has a state size of `N` bits, it has at most `2^N` unique states, which means that after at most `2^N` cycles, the PRNG will end up in a state it has been in before, and it will start repeating itself. At that point the output is clearly no longer random. The number of cycles it takes for the PRNG to start repeating itself is known as the period of the PRNG. We want this period to be as close as possible to the `2^N` upper bound. If the period of a PRNG is much smaller than this upper bound, it suggests that the underlying design is flawed, or at least suboptimal.
 
-The minimum allowable period is application-dependent: for some very simple applications, a period as short as 2^16 may be sufficient. For typical applications, 2^32 is more reasonable. A period of 2^64 is almost certainly more than any application will ever need, since even at a clock speed of 10GHz it would take 58 years to exceed this period. Xormix is designed to have a configurable minimum period, giving the designer the freedom to choose the implementation that best fits the requirements of the application.
+The minimum allowable period is application-dependent: for some very simple applications, a period as short as `2^16` may be sufficient. For typical applications, `2^32` is more reasonable. A period of `2^64` is almost certainly more than any application will ever need, since even at a clock speed of 10GHz it would take 58 years to exceed this period. Xormix is designed to have a configurable minimum period, giving the designer the freedom to choose the implementation that best fits the requirements of the application.
 
 Although we generally want to minimize the state size, there is a tradeoff involved here: in order to achieve high quality random output with a small state size, we need to use relatively complex operations to mix up the state bits sufficiently to make the output of the PRNG look random. If we instead choose a state size which is somewhat larger than necessary, we can reduce the complexity of the mixing operations. In software, it often makes sense to minimize the state size, since accessing memory is typically much slower than doing a few extra operations such as multiplication. However in hardware this is different, because the flip-flops that are used as storage elements are relatively cheap, whereas operations such as multiplication are quite expensive. So in hardware it makes a lot of sense to increase the state size a bit in order to reduce the complexity of the logic.
 
@@ -48,7 +48,7 @@ From a hardware perspective, it is appealing to drop the output function entirel
 
 Some PRNGs are said to be 'linear', which essentially means that their state-transition function and output functions satisfy certain mathematical properties that make them easy to analyze. This is often convenient, because it makes it possible to calculate some properties of the PRNG mathematically, most notably the period. Some examples of linear PRNGs are [LFSRs](https://en.wikipedia.org/wiki/Linear-feedback_shift_register), [LCGs](https://en.wikipedia.org/wiki/Linear_congruential_generator) and [xorshift](https://en.wikipedia.org/wiki/Xorshift).
 
-Linear PRNGs are well understood mathematically, and they can be designed to have a period very close to the theoretical maximum, such as 2^N (for LCGs) or 2^N-1 (for LFSRs and xorshift), without having to actually simulate the PRNG for 2^N cycles to prove this. To some extent it is also possible to predict mathematically which parameters will produce high-quality random output.
+Linear PRNGs are well understood mathematically, and they can be designed to have a period very close to the theoretical maximum, such as `2^N` (for LCGs) or `2^N-1` (for LFSRs and xorshift), without having to actually simulate the PRNG for `2^N` cycles to prove this. To some extent it is also possible to predict mathematically which parameters will produce high-quality random output.
 
 In contrast, nonlinear PRNGs do not have such nice mathematical properties, and their behavior is much more chaotic. This makes it much harder to predict how they will behave, and which nonlinear designs will produce the highest quality random output. It is still possible to make some statistical predictions about nonlinear PRNGs, but there is usually no easy way to predict which parameters will produce high-quality output and which ones will not. Instead we have to rely on lots of brute-force simulations, which makes the design of nonlinear PRNGs a lot more difficult.
 
@@ -58,9 +58,9 @@ Linear PRNGs clearly have a lot of design advantages, however they have one majo
 
 Since nonlinear state-transition functions can not be easily analyzed mathematically, we need to rely on statistical methods instead. As it turns out, the statistical properties of a nonlinear PRNG depend strongly on whether the state-transition function is invertible or not.
 
-An invertible function is a function that maps each input to exactly one unique output, i.e. there are no two inputs that will produce the same output, and each output will appear exactly once. In contrast, a non-invertible function may produce the same output for multiple inputs, and some outputs may never appear at all. This has a big impact on the statistical properties of the PRNG. If a non-invertible state-transition function is used, the number of possible states that the PRNG can be in decreases with each iteration, because some states can be reached in more than one way while other state can not be reached at all. After a while, the PRNG will usually get stuck in a relatively short loop that repeats forever, and at that point the PRNG is clearly no longer random. In contrast, PRNGs that use an invertible state-transition function do not suffer from this issue, since all possible states remain reachable regardless the number of iterations.
+An invertible function is a function that maps each input to exactly one unique output, i.e. there are no two inputs that will produce the same output, and each output will appear exactly once. In contrast, a non-invertible function may produce the same output for multiple inputs, and some outputs may never appear at all. This has a big impact on the statistical properties of the PRNG. If a non-invertible state-transition function is used, the number of possible states that the PRNG can be in decreases with each iteration, because some states can be reached in more than one way while other state can not be reached at all. After a while, the PRNG will usually get stuck in a relatively short loop that repeats forever, and at that point the PRNG is clearly no longer random. In contrast, PRNGs that use an invertible state-transition function do not suffer from this issue, since all possible states remain reachable regardless of the number of iterations.
 
-The expected period of an N-bit PRNG based on a good invertible state-transition function is 2^(N-1), which is fairly good. However for a non-invertible state-transition function, the expected period is only roughly 2^(N/2), as a consequence of the [birthday paradox](https://en.wikipedia.org/wiki/Birthday_problem). Note that these are just the average expected periods - the actual period may occasionally be much lower or much higher. Still, it is clear that invertible state-transition functions are a much better choice than non-invertible ones.
+The expected period of an N-bit PRNG based on a good invertible state-transition function is `2^(N-1)`, which is fairly good. However for a non-invertible state-transition function, the expected period is only roughly `2^(N/2)`, as a consequence of the [birthday paradox](https://en.wikipedia.org/wiki/Birthday_problem). Note that these are just the average expected periods - the actual period may occasionally be much lower or much higher. Still, it is clear that invertible state-transition functions are a much better choice than non-invertible ones.
 
 More information on this subject can be found in [this article](https://www.pcg-random.org/posts/random-invertible-mapping-statistics.html).
 
@@ -82,23 +82,66 @@ It is often useful or even necessary to run multiple instances of the same PRNG 
 
 If the seeds of multiple PRNGs are chosen randomly, there is a small chance that the seeds correspond to states that are close together within the period of the PRNG, such that after a while one of the PRNGs starts producing output that has already been produced earlier by another PRNG, long before the PRNG reaches its full period. I call this a collision.
 
-The probability that this will happen with just two instances of the PRNG is fairly low. For example, for two instances of an N-bit PRNG there is a probability of about 2^(1-N/2) that the two instances will collide within less than 2^(N/2) cycles, assuming that the PRNG has a period of 2^N cycles. However this probability increases quadratically with the number of instances of the PRNG due to the [birthday paradox](https://en.wikipedia.org/wiki/Birthday_problem), so if the number of PRNG instances is large, it can become a serious concern.
+The probability that this will happen with just two instances of the PRNG is fairly low. For example, for two instances of an `N`-bit PRNG there is a probability of about `2^(1-N/2)` that the two instances will collide within less than `2^(N/2)` cycles, assuming that the PRNG has a period of about `2^N` cycles. However this probability increases quadratically with the number of instances of the PRNG due to the [birthday paradox](https://en.wikipedia.org/wiki/Birthday_problem), so if the number of PRNG instances is large, it can become a serious concern.
 
-A possible solution is to pick a PRNG with an exceptionally large period, such that the probability of collisions remains low even with a large number of instances. However this increases the hardware cost. A better solution is to pick the seeds of the PRNG instances in a specific way such that they are guaranteed to be uniformly distributed across the whole period of the PRNG. That way it is guaranteed that there won't be any collisions until 2^N/K cycles, where K is the number of instances. Xormix supports generation of uniformly distributed seeds using the xormix command-line tool.
-
-
-
-
+A possible solution is to pick a PRNG with an exceptionally large period, such that the probability of collisions remains low even with a large number of instances. However this increases the hardware cost. A better solution is to pick the seeds of the PRNG instances in a specific way such that they are guaranteed to be uniformly distributed across the whole period of the PRNG. That way it is guaranteed that there won't be any collisions until `2^N/K` cycles, where `K` is the number of instances. Xormix supports generation of such uniformly distributed seeds using the xormix command-line tool.
 
 Two-stage PRNG structure
 ------------------------
 
-
-
-
+As discussed earlier, linear and nonlinear PRNGs both have some benefits and some drawbacks. In order to combine the best properties of linear and nonlinear PRNGs, xormix uses a two-stage structure where the first stage is linear, and the second stage is nonlinear. The output of the first stage is mixed into the state of the second stage, and the state of the second stage also serves as the output of the PRNG. In a sense, the second stage can be viewed as an output function for the first stage. The two stages were designed independently, but with different goals in mind. The first stage is responsible for giving the PRNG a minimum guaranteed period of `2^N-1` and is designed to be as random as possible on its own. The second stage is designed to mix up the output of the first stage as much as possible in a nonlinear way, and destroys any patterns that may still be present in the output from the first stage. It also extends the output from `N` bits to `N * S` bits with a very low hardware cost. The second stage also increases the average period of the PRNG dramatically, however this isn't the primary goal.
 
 First stage
 -----------
+
+The first stage is essentially a generalization of the [xorshift](https://en.wikipedia.org/wiki/Xorshift) random number generator. In a xorshift PRNG, the state is transformed by repeated shifting and XOR-ing with itself, such that each new state bit is the XOR combination of several previous state bits. For specific shift combinations, it can be shown that this PRNG has a period of `2^N-1`, going through every possible state except zero. In fact, it has been proven that [for each xorshift PRNG there exists an equivalent LFSR which produces the exact same output](https://www.jstatsoft.org/article/view/v011i05). The equivalent LFSR polynomial is usually dense, which is good, because dense LFSR are known to have better randomness properties than LFSRs based on sparse polynomials. Since xorshift PRNGs require significantly fewer XOR operations than the equivalent dense LFSR does, it can be seen as a more efficient way to implement a high-quality LFSR.
+
+Xormix generalizes the xorshift idea by replacing the bitwise XOR and shift operations with XOR combinations of arbitrary bits. The implementation cost of this generalized PRNG is about the same as a xorshift PRNG, but it is a lot more flexible and allows for better randomness. The state-transition function of the first stage is essentially a binary matrix multiplication with a sparse matrix. To illustrate this, consider the following state-transfer function:
+
+	X'[0] = X[1] xor X[3] xor X[5]
+	X'[1] = X[0] xor X[2] xor X[4] xor X[5]
+	X'[2] = X[2] xor X[4] xor X[7]
+	X'[3] = X[3] xor X[4] xor X[6] xor X[7]
+	X'[4] = X[0] xor X[2] xor X[5]
+	X'[5] = X[2] xor X[3] xor X[5] xor X[6]
+	X'[6] = X[1] xor X[3] xor X[7]
+	X'[7] = X[0] xor X[1] xor X[2] xor X[4]
+
+The equivalent state-transition matrix `T` is:
+
+	[0 1 0 1 0 1 0 0]
+	[1 0 1 0 1 1 0 0]
+	[0 0 1 0 1 0 0 1]
+	[0 0 0 1 1 0 1 1]
+	[1 0 1 0 0 1 0 0]
+	[0 0 1 1 0 1 1 0]
+	[0 1 0 1 0 0 0 1]
+	[1 1 1 0 1 0 0 0]
+
+The design process boils down to picking a matrix `T` with good randomness properties. I selected the matrices based on the following requirements:
+
+1. The number of ones in each row of `T` should be between 5 and 6 (such that it can be efficiently implemented using 6-input LUTs on FPGA).
+2. The number of ones in each column of `T` should be between 4 and 7 (to avoid excessively high fanout and to ensure that all bits are used several times).
+3. Two different rows of `T` should never have more than 3 ones in common, and the number of rows with 3 ones in common should be minimized.
+4. The inverse of `T` should be dense and should not exhibit any obvious patterns.
+5. The PRNG created by `T` should have a period of `2^N-1`.
+
+Requirements 1 and 2 can be satisfied by construction. I used an algorithm to generate suitable matrices as follows:
+
+- For each row, place a one in 5 or 6 randomly chosen columns.
+- Count the number of ones in each column.
+- Iterate over all ones in the matrix, and randomly move them to a different column (while staying in the same row). The probability that a one is moved increases with the number of ones that are already in that column.
+- Repeat this until the number of ones in each column is between 4 and 7
+
+This algorithm is repeated until a matrix is found which also satisfies the remaining three requirements. Requirements 3 and 4 are easy to check. Requirement 5 can be checked as follows:
+
+- Calculate `P = 2^N - 1`.
+- Calculate the prime factors `F1, F2, F3, ...` of `P`.
+- Check that `T^P` is equal to the identity matrix.
+- Check that for each prime factor `Fi`, `T^(P/Fi)` is *not* equal to the identity matrix.
+
+
+
 
 
 

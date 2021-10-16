@@ -53,7 +53,7 @@ When multiple parallel output streams are used, the recurrence relation becomes:
 
 Note that in both cases, this recurrence relation is unrolled `N` times in order to produce `N * S` new state bits each cycle. The mixed-in data is simply the X state from the first stage, but shuffled and with some bits inverted:
 
-	mixin[i][j] = (X ^ salts[i])[(i + shuffle[j]) % N]
+	mixin[i][j] = (X xor salts[i])[(i + shuffle[j]) % N]
 
 The salts and shuffle function again depend on `N`. For xormix16, they are:
 
@@ -83,8 +83,7 @@ As a result, the complete Y update function for xormix16 (with one stream) is as
 Seeding procedure
 -----------------
 
-Full seeding procedure
-======================
+### Full seeding procedure
 
 The xormix PRNG should be seeded by setting the entire state to a random value. Any value is acceptable with one exception: the X state should always be nonzero. Appropriate seeds can be generated with the xormix command-line tool (`xormix-tool`), which implements the following algorithm:
 
@@ -92,26 +91,23 @@ The xormix PRNG should be seeded by setting the entire state to a random value. 
 		X = random();
 	} while(X == 0);
 	for(i = 0; i < S; ++i) {
-		Y = random();
+		Y[i] = random();
 	}
 
-Simplified seeding procedure
-============================
+### Simplified seeding procedure
 
-Sometimes it is more convenient to seed the entire PRNG with a single integer. For this purpose a simplified seeding procedure can be used. In this case, the X state and all Y states are set to the same (nonzero) value. After this, the first few outputs of the PRNG should be discarded since these are not very random. I recommend discarding at least `N` cycles worth of output in order to ensure that the state has been mixed up sufficiently to get good randomness. The simplified seeding procedure is described by the following algorithm:
+Sometimes it is more convenient to seed the entire PRNG with a smaller seed. For this purpose a simplified seeding procedure can be used. In this case, all Y states are set to the same value. After this, the first few outputs of the PRNG should be discarded since these are not very random. Based on randomness testing with PractRand it appears that discarding 4 cycles worth of output is sufficient to ensure that the state has been mixed up sufficiently regardless of the word size or number of streams. The simplified seeding procedure is described by the following algorithm:
 
-	// select a random nonzero seed
+	// initialize the PRNG
 	do {
-		seed = random();
-	} while(seed == 0);
-	
-	// initialize the PRNG based on the chosen seed
-	X = seed;
-	for(i = 0; i < S; ++i) {
-		Y = seed;
+		X = random();
+	} while(X == 0);
+	Y[0] = random();
+	for(i = 1; i < S; ++i) {
+		Y[i] = Y[0]
 	}
 	
-	// discard the first N cycles worth of output
-	for(i = 0; i < N; ++i) {
+	// discard the first 4 cycles worth of output
+	for(i = 0; i < 4; ++i) {
 		next_state();
 	}
