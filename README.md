@@ -42,7 +42,7 @@ Implementations
 
 Hardware implementations and simple testbenches written in VHDL and Verilog are available in the `vhdl` and `verilog` directories.
 
-Two software implementations are also available for testing and verification purposes. The reference implementation is written in Python and can be found in the `python` directory. This implementation is easy to understand and was used to generate the test vectors for all other implementations, but it is very slow. A much faster C++ implementation can be found in the `cpp` folder, along with a command-line tool (`xormix-tool`) which can be used to generate seeds and random output in various formats.
+Two software implementations are also available for testing and verification purposes. The reference implementation is written in Python and can be found in the `python/reference` directory. This implementation is easy to understand and was used to generate the test vectors for all other implementations, but it is very slow. A much faster C++ implementation can be found in the `cpp` folder, along with a command-line tool (`xormix-tool`) which can be used to generate seeds and random output in various formats.
 
 Note that even the optimized C++ implementation is still much slower than other pseudorandom number generators that were designed to be fast in software. Xormix is not meant to be used in software-only applications, the design only makes sense when implemented in hardware.
 
