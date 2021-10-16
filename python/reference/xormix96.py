@@ -138,7 +138,7 @@ shuffle = [
 	10, 81, 60, 51, 43, 75,  8, 89, 39, 86, 14,  7, 52,  0, 49, 17,
 ]
 
-shifts = [42, 46, 35, 43]
+shifts = [45, 46, 36, 43]
 
 def next_state(state):
 	return xormix.next_state(matrix, salts, shuffle, shifts, state)

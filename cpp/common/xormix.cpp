@@ -513,7 +513,7 @@ template<>
 const size_t xormix64::XORMIX_SHIFTS[4] = {28, 31, 24, 30};
 
 template<>
-const size_t xormix96::XORMIX_SHIFTS[4] = {42, 46, 35, 43};
+const size_t xormix96::XORMIX_SHIFTS[4] = {45, 46, 36, 43};
 
 template<>
 const size_t xormix128::XORMIX_SHIFTS[4] = {47, 61, 56, 62};
