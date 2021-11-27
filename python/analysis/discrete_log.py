@@ -10,6 +10,8 @@ import time
 import lfsr_mapping
 from xormix_discrete_log import *
 
+import generate_matrix
+
 def is_primitive(n, gen, poly, factors):
 	if gf_pow(n, gen, 2**n - 1, poly) != 1:
 		return False
@@ -30,7 +32,6 @@ def discrete_log(n, val, gen, poly, factors):
 		res += k * m
 		val = gf_mul(n, val, gf_pow(n, gen, 2**n - 1 - k * m, poly), poly)
 		m *= f
-		#print('f', f, 'k', k, 'val', val)
 	assert val == 1
 	return res
 
@@ -38,11 +39,22 @@ def calculate_discrete_logs(n):
 
 	print(f'Discrete logs for xormix{n}')
 
+	a = lfsr_mapping.make_matrix(n)
 	(u, p, v) = lfsr_mapping.make_mapping(n)
 	poly = (1 << n) + sum(p[:, -1].astype(object) << numpy.arange(n, dtype=object))
 
+	# print('Matrix:')
+	# lfsr_mapping.print_matrix(a)
+
+	# print('Decomposed matrix:')
+	# lfsr_mapping.print_matrix(u, p, v)
+
+	ones = sum((poly >> i) & 1 for i in range(n + 1))
+	# print(f'poly 0x{poly:0{n//4+1}x} (ones={ones}, avg={n//2+2})')
+	print(f'poly 0x{poly:0{n//4+1}x}')
+
 	factors = [int(x) for x in subprocess.check_output(['factor', str(2**n - 1)]).split()[1:]]
-	print('factors:', factors)
+	# print('factors:', factors)
 
 	if not is_primitive(n, 2, poly, factors):
 		raise Exception('Invalid polynomial')
@@ -70,43 +82,37 @@ def calculate_discrete_logs(n):
 			z = (z >> 1) ^ ((y & 1) << (n - 1))
 		k = discrete_log(n, x, 2, poly, factors)
 		res1[i] = k
-		print(f'discretelog {i} 0x{x:0{n//4}x} 0x{k:0{n//4}x}') #, bin(z), bin(sum(u[i, :].astype(object) << numpy.arange(n, dtype=object))))
-
-
-
-	# a = lfsr_mapping.make_matrix(n)
-	# x = 1
-	# z = 0
-	# res2 = [0] * n
-	# for i in range(2**n - 1):
-	# 	x <<= 1
-	# 	if x >> n:
-	# 		x ^= poly
-	# 	z = (z >> 1) ^ ((x & 1) << (n - 1))
-	# 	for j in range(n):
-	# 		if sum(u[j, :].astype(object) << numpy.arange(n, dtype=object)) == z:
-	# 			res2[j] = i
-	# 			print('bruteforce', j, i)
-
-	# res1 = numpy.array(res1, dtype=object)
-	# res2 = numpy.array(res2, dtype=object)
-
-	# print((res1 - res1[0]) % (2**n - 1))
-	# print((res2 - res2[0]) % (2**n - 1))
-
-
+		print(f'discretelog {i} 0x{x:0{n//4}x} 0x{k:0{n//4}x}')
 
 	res1.sort()
+	res1 = numpy.array(res1, dtype=object)
 	d = (res1 - numpy.roll(res1, 1)) % (2**n - 1)
+	rel_dist = min(d) / (2**n // n**2)
+
 	#print('all distances', d)
 	print('min distance', min(d))
 	print('expected min distance', 2**n // n**2)
-	print('relative min distance', min(d) / (2**n // n**2))
+	print('relative min distance', rel_dist)
 
 	t2 = time.time()
 
 	print('time:', t2 - t1)
 	print()
 
+	return rel_dist
+
 for n in [16, 24, 32, 48, 64, 96, 128]:
 	calculate_discrete_logs(n)
+
+# for n in [64]:
+# 	for i in range(6, 1000):
+# 		suffix = '' if i == 0 else f'-{i+1}'
+# 		selection = generate_matrix.make_xormix_matrix(n, suffix.encode())
+# 		lfsr_mapping.modules[n].matrix = selection
+# 		rel_dist = calculate_discrete_logs(n)
+# 		if rel_dist >= 4.0:
+# 			print()
+# 			print(f'xormix{n}:')
+# 			generate_matrix.print_xormix_matrix(n, selection)
+# 			print()
+# 			break
