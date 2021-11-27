@@ -84,22 +84,22 @@ module xormix16
             
         end else if (enable == 1'b1) begin
             
-            r_state_x[ 0] <= r_state_x[10] ^ r_state_x[12] ^ r_state_x[ 2] ^ r_state_x[ 8] ^ r_state_x[15];
-            r_state_x[ 1] <= r_state_x[15] ^ r_state_x[10] ^ r_state_x[ 7] ^ r_state_x[14] ^ r_state_x[13] ^ r_state_x[ 5];
-            r_state_x[ 2] <= r_state_x[10] ^ r_state_x[ 9] ^ r_state_x[ 4] ^ r_state_x[ 7] ^ r_state_x[ 0];
-            r_state_x[ 3] <= r_state_x[14] ^ r_state_x[ 0] ^ r_state_x[ 3] ^ r_state_x[ 8] ^ r_state_x[ 9] ^ r_state_x[ 1];
-            r_state_x[ 4] <= r_state_x[ 1] ^ r_state_x[ 3] ^ r_state_x[ 9] ^ r_state_x[12] ^ r_state_x[13];
-            r_state_x[ 5] <= r_state_x[ 7] ^ r_state_x[ 2] ^ r_state_x[12] ^ r_state_x[ 9] ^ r_state_x[11] ^ r_state_x[15];
-            r_state_x[ 6] <= r_state_x[ 1] ^ r_state_x[ 2] ^ r_state_x[ 4] ^ r_state_x[ 3] ^ r_state_x[ 0];
-            r_state_x[ 7] <= r_state_x[10] ^ r_state_x[ 6] ^ r_state_x[ 3] ^ r_state_x[ 0] ^ r_state_x[ 4] ^ r_state_x[11];
-            r_state_x[ 8] <= r_state_x[ 2] ^ r_state_x[ 7] ^ r_state_x[13] ^ r_state_x[ 6] ^ r_state_x[ 8];
-            r_state_x[ 9] <= r_state_x[ 5] ^ r_state_x[ 0] ^ r_state_x[12] ^ r_state_x[ 3] ^ r_state_x[15] ^ r_state_x[ 9];
-            r_state_x[10] <= r_state_x[13] ^ r_state_x[ 0] ^ r_state_x[ 9] ^ r_state_x[ 4] ^ r_state_x[ 8];
-            r_state_x[11] <= r_state_x[ 1] ^ r_state_x[ 5] ^ r_state_x[12] ^ r_state_x[ 6] ^ r_state_x[13] ^ r_state_x[ 4];
-            r_state_x[12] <= r_state_x[12] ^ r_state_x[ 1] ^ r_state_x[ 6] ^ r_state_x[10] ^ r_state_x[14];
-            r_state_x[13] <= r_state_x[11] ^ r_state_x[15] ^ r_state_x[ 8] ^ r_state_x[ 7] ^ r_state_x[ 5] ^ r_state_x[ 1];
-            r_state_x[14] <= r_state_x[10] ^ r_state_x[11] ^ r_state_x[ 2] ^ r_state_x[ 0] ^ r_state_x[ 5];
-            r_state_x[15] <= r_state_x[ 6] ^ r_state_x[14] ^ r_state_x[12] ^ r_state_x[11] ^ r_state_x[ 5] ^ r_state_x[ 9];
+            r_state_x[ 0] <= r_state_x[ 3] ^ r_state_x[11] ^ r_state_x[ 1] ^ r_state_x[ 4] ^ r_state_x[13];
+            r_state_x[ 1] <= r_state_x[11] ^ r_state_x[12] ^ r_state_x[10] ^ r_state_x[ 2] ^ r_state_x[ 8] ^ r_state_x[ 9];
+            r_state_x[ 2] <= r_state_x[ 0] ^ r_state_x[10] ^ r_state_x[11] ^ r_state_x[ 4] ^ r_state_x[15];
+            r_state_x[ 3] <= r_state_x[ 1] ^ r_state_x[11] ^ r_state_x[13] ^ r_state_x[ 0] ^ r_state_x[ 6] ^ r_state_x[10];
+            r_state_x[ 4] <= r_state_x[ 8] ^ r_state_x[ 3] ^ r_state_x[ 6] ^ r_state_x[ 1] ^ r_state_x[ 7];
+            r_state_x[ 5] <= r_state_x[ 3] ^ r_state_x[ 5] ^ r_state_x[ 4] ^ r_state_x[ 1] ^ r_state_x[14] ^ r_state_x[ 6];
+            r_state_x[ 6] <= r_state_x[ 8] ^ r_state_x[ 7] ^ r_state_x[12] ^ r_state_x[11] ^ r_state_x[13];
+            r_state_x[ 7] <= r_state_x[14] ^ r_state_x[ 7] ^ r_state_x[ 8] ^ r_state_x[ 5] ^ r_state_x[13] ^ r_state_x[10];
+            r_state_x[ 8] <= r_state_x[ 7] ^ r_state_x[ 0] ^ r_state_x[ 4] ^ r_state_x[12] ^ r_state_x[13];
+            r_state_x[ 9] <= r_state_x[15] ^ r_state_x[ 3] ^ r_state_x[ 9] ^ r_state_x[ 2] ^ r_state_x[11] ^ r_state_x[ 5];
+            r_state_x[10] <= r_state_x[ 0] ^ r_state_x[ 9] ^ r_state_x[ 6] ^ r_state_x[11] ^ r_state_x[ 4];
+            r_state_x[11] <= r_state_x[12] ^ r_state_x[15] ^ r_state_x[ 2] ^ r_state_x[ 3] ^ r_state_x[14] ^ r_state_x[ 0];
+            r_state_x[12] <= r_state_x[14] ^ r_state_x[ 3] ^ r_state_x[ 9] ^ r_state_x[13] ^ r_state_x[ 0];
+            r_state_x[13] <= r_state_x[ 6] ^ r_state_x[10] ^ r_state_x[12] ^ r_state_x[ 7] ^ r_state_x[ 2] ^ r_state_x[ 1];
+            r_state_x[14] <= r_state_x[ 5] ^ r_state_x[ 7] ^ r_state_x[ 1] ^ r_state_x[15] ^ r_state_x[ 6];
+            r_state_x[15] <= r_state_x[ 0] ^ r_state_x[ 7] ^ r_state_x[10] ^ r_state_x[14] ^ r_state_x[ 9] ^ r_state_x[ 1];
             
             r_state_y <= v_state_y2;
             

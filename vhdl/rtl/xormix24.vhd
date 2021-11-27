@@ -63,30 +63,30 @@ begin
                 
             elsif enable = '1' then
                 
-                r_state_x( 0) <= r_state_x( 5) xor r_state_x( 4) xor r_state_x(18) xor r_state_x(11) xor r_state_x(14);
-                r_state_x( 1) <= r_state_x(12) xor r_state_x(16) xor r_state_x(22) xor r_state_x(17) xor r_state_x(19) xor r_state_x( 2);
-                r_state_x( 2) <= r_state_x( 0) xor r_state_x(21) xor r_state_x( 9) xor r_state_x(18) xor r_state_x(13);
-                r_state_x( 3) <= r_state_x( 1) xor r_state_x(11) xor r_state_x(23) xor r_state_x( 9) xor r_state_x( 3) xor r_state_x(16);
-                r_state_x( 4) <= r_state_x(12) xor r_state_x( 8) xor r_state_x( 4) xor r_state_x(11) xor r_state_x( 3);
-                r_state_x( 5) <= r_state_x(10) xor r_state_x( 9) xor r_state_x(13) xor r_state_x(19) xor r_state_x( 4) xor r_state_x( 8);
-                r_state_x( 6) <= r_state_x( 8) xor r_state_x( 2) xor r_state_x(13) xor r_state_x(11) xor r_state_x(20);
-                r_state_x( 7) <= r_state_x(16) xor r_state_x( 5) xor r_state_x(10) xor r_state_x(17) xor r_state_x(14) xor r_state_x(23);
-                r_state_x( 8) <= r_state_x(23) xor r_state_x(22) xor r_state_x(20) xor r_state_x(15) xor r_state_x(16);
-                r_state_x( 9) <= r_state_x( 0) xor r_state_x(20) xor r_state_x(11) xor r_state_x(22) xor r_state_x( 9) xor r_state_x(15);
-                r_state_x(10) <= r_state_x( 3) xor r_state_x(22) xor r_state_x( 5) xor r_state_x(12) xor r_state_x( 4);
-                r_state_x(11) <= r_state_x(23) xor r_state_x( 6) xor r_state_x( 7) xor r_state_x(10) xor r_state_x(21) xor r_state_x(20);
-                r_state_x(12) <= r_state_x( 6) xor r_state_x(10) xor r_state_x( 9) xor r_state_x(15) xor r_state_x( 2);
-                r_state_x(13) <= r_state_x(20) xor r_state_x( 8) xor r_state_x( 4) xor r_state_x(10) xor r_state_x(21) xor r_state_x(15);
-                r_state_x(14) <= r_state_x(18) xor r_state_x(22) xor r_state_x(15) xor r_state_x(13) xor r_state_x(19);
-                r_state_x(15) <= r_state_x(15) xor r_state_x(17) xor r_state_x(13) xor r_state_x( 3) xor r_state_x( 7) xor r_state_x( 1);
-                r_state_x(16) <= r_state_x( 9) xor r_state_x( 6) xor r_state_x( 1) xor r_state_x( 0) xor r_state_x( 7);
-                r_state_x(17) <= r_state_x( 1) xor r_state_x(14) xor r_state_x(18) xor r_state_x(17) xor r_state_x( 5) xor r_state_x( 7);
-                r_state_x(18) <= r_state_x(10) xor r_state_x(18) xor r_state_x( 0) xor r_state_x(16) xor r_state_x(21);
-                r_state_x(19) <= r_state_x(11) xor r_state_x(19) xor r_state_x(23) xor r_state_x(21) xor r_state_x( 3) xor r_state_x(17);
-                r_state_x(20) <= r_state_x( 8) xor r_state_x( 7) xor r_state_x( 1) xor r_state_x(16) xor r_state_x( 6);
-                r_state_x(21) <= r_state_x( 8) xor r_state_x( 0) xor r_state_x(22) xor r_state_x(21) xor r_state_x(16) xor r_state_x( 5);
-                r_state_x(22) <= r_state_x(14) xor r_state_x( 6) xor r_state_x(17) xor r_state_x( 2) xor r_state_x( 4);
-                r_state_x(23) <= r_state_x(12) xor r_state_x( 2) xor r_state_x(14) xor r_state_x(19) xor r_state_x( 0) xor r_state_x( 1);
+                r_state_x( 0) <= r_state_x( 0) xor r_state_x(17) xor r_state_x( 2) xor r_state_x( 9) xor r_state_x(22);
+                r_state_x( 1) <= r_state_x(18) xor r_state_x( 1) xor r_state_x(14) xor r_state_x(11) xor r_state_x( 4) xor r_state_x( 9);
+                r_state_x( 2) <= r_state_x(19) xor r_state_x(15) xor r_state_x(17) xor r_state_x(23) xor r_state_x( 7);
+                r_state_x( 3) <= r_state_x(18) xor r_state_x(13) xor r_state_x(14) xor r_state_x( 0) xor r_state_x( 6) xor r_state_x( 7);
+                r_state_x( 4) <= r_state_x(18) xor r_state_x(20) xor r_state_x( 1) xor r_state_x(19) xor r_state_x(11);
+                r_state_x( 5) <= r_state_x(23) xor r_state_x(15) xor r_state_x( 5) xor r_state_x(16) xor r_state_x( 4) xor r_state_x( 3);
+                r_state_x( 6) <= r_state_x( 2) xor r_state_x( 6) xor r_state_x( 3) xor r_state_x(15) xor r_state_x(20);
+                r_state_x( 7) <= r_state_x( 4) xor r_state_x( 5) xor r_state_x(16) xor r_state_x( 8) xor r_state_x(12) xor r_state_x(21);
+                r_state_x( 8) <= r_state_x(20) xor r_state_x( 5) xor r_state_x(10) xor r_state_x(15) xor r_state_x( 2);
+                r_state_x( 9) <= r_state_x( 3) xor r_state_x(23) xor r_state_x(14) xor r_state_x( 0) xor r_state_x( 9) xor r_state_x(20);
+                r_state_x(10) <= r_state_x( 1) xor r_state_x(11) xor r_state_x( 0) xor r_state_x(23) xor r_state_x(13);
+                r_state_x(11) <= r_state_x(20) xor r_state_x( 8) xor r_state_x(10) xor r_state_x(14) xor r_state_x( 7) xor r_state_x( 2);
+                r_state_x(12) <= r_state_x( 8) xor r_state_x( 6) xor r_state_x( 0) xor r_state_x( 3) xor r_state_x(16);
+                r_state_x(13) <= r_state_x( 5) xor r_state_x(22) xor r_state_x(16) xor r_state_x( 2) xor r_state_x(18) xor r_state_x(11);
+                r_state_x(14) <= r_state_x( 2) xor r_state_x(22) xor r_state_x( 3) xor r_state_x( 8) xor r_state_x( 1);
+                r_state_x(15) <= r_state_x( 5) xor r_state_x(21) xor r_state_x(22) xor r_state_x( 7) xor r_state_x(11) xor r_state_x(10);
+                r_state_x(16) <= r_state_x(12) xor r_state_x( 6) xor r_state_x(15) xor r_state_x(14) xor r_state_x( 4);
+                r_state_x(17) <= r_state_x( 9) xor r_state_x( 4) xor r_state_x( 1) xor r_state_x(17) xor r_state_x( 6) xor r_state_x(19);
+                r_state_x(18) <= r_state_x(12) xor r_state_x(20) xor r_state_x(22) xor r_state_x( 9) xor r_state_x(21);
+                r_state_x(19) <= r_state_x(16) xor r_state_x(19) xor r_state_x(18) xor r_state_x(12) xor r_state_x( 0) xor r_state_x( 3);
+                r_state_x(20) <= r_state_x( 3) xor r_state_x(10) xor r_state_x(14) xor r_state_x(17) xor r_state_x( 1);
+                r_state_x(21) <= r_state_x(23) xor r_state_x(13) xor r_state_x(21) xor r_state_x( 9) xor r_state_x(12) xor r_state_x( 7);
+                r_state_x(22) <= r_state_x(22) xor r_state_x(14) xor r_state_x( 8) xor r_state_x( 9) xor r_state_x(10);
+                r_state_x(23) <= r_state_x( 8) xor r_state_x(19) xor r_state_x(21) xor r_state_x(23) xor r_state_x(17) xor r_state_x(13);
                 
                 for i in 0 to streams - 1 loop
                     v_mixin := r_state_x xor salts(i);
