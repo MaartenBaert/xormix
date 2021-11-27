@@ -4,23 +4,7 @@
 import numpy
 import random
 
-import xormix16
-import xormix24
-import xormix32
-import xormix48
-import xormix64
-import xormix96
-import xormix128
-
-modules = {
-	16: xormix16,
-	24: xormix24,
-	32: xormix32,
-	48: xormix48,
-	64: xormix64,
-	96: xormix96,
-	128: xormix128,
-}
+from xormix_all import modules
 
 def output_generator(n):
 	state = [random.getrandbits(n) for i in range(2)]

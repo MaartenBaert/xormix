@@ -4,27 +4,27 @@
 import math
 import numpy
 import random
-import subprocess
 import time
 
 import lfsr_mapping
-from xormix_discrete_log import *
-
 import generate_matrix
 
-def is_primitive(n, gen, poly, factors):
+from xormix_all import factors
+from xormix_discrete_log import *
+
+def is_primitive(n, gen, poly):
 	if gf_pow(n, gen, 2**n - 1, poly) != 1:
 		return False
-	for f in factors:
+	for f in factors[n]:
 		assert (2**n - 1) % f == 0
 		if gf_pow(n, gen, (2**n - 1) // f, poly) == 1:
 			return False
 	return True
 
-def discrete_log(n, val, gen, poly, factors):
+def discrete_log(n, val, gen, poly):
 	m = 1
 	res = 0
-	for f in factors:
+	for f in factors[n]:
 		subval = gf_pow(n, val, (2**n - 1) // (m * f), poly)
 		subgen = gf_pow(n, gen, (2**n - 1) // f, poly)
 		k = bsgs(n, subval, subgen, f, poly)
@@ -49,21 +49,11 @@ def calculate_discrete_logs(n):
 	# print('Decomposed matrix:')
 	# lfsr_mapping.print_matrix(u, p, v)
 
-	ones = sum((poly >> i) & 1 for i in range(n + 1))
+	# ones = sum((poly >> i) & 1 for i in range(n + 1))
 	# print(f'poly 0x{poly:0{n//4+1}x} (ones={ones}, avg={n//2+2})')
 	print(f'poly 0x{poly:0{n//4+1}x}')
 
-	factors = [int(x) for x in subprocess.check_output(['factor', str(2**n - 1)]).split()[1:]]
-	# print('factors:', factors)
-
-	if not is_primitive(n, 2, poly, factors):
-		raise Exception('Invalid polynomial')
-
-	x = 1
-	for f in factors:
-		x *= f
-	if x != 2**n - 1:
-		raise Exception('Invalid factors')
+	assert is_primitive(n, 2, poly), 'Invalid polynomial'
 
 	t1 = time.time()
 
@@ -80,7 +70,7 @@ def calculate_discrete_logs(n):
 			if y >> n:
 				y ^= poly
 			z = (z >> 1) ^ ((y & 1) << (n - 1))
-		k = discrete_log(n, x, 2, poly, factors)
+		k = discrete_log(n, x, 2, poly)
 		res1[i] = k
 		print(f'discretelog {i} 0x{x:0{n//4}x} 0x{k:0{n//4}x}')
 

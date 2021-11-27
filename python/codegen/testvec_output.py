@@ -3,28 +3,12 @@
 
 import random
 
-import xormix16
-import xormix24
-import xormix32
-import xormix48
-import xormix64
-import xormix96
-import xormix128
+from xormix_all import modules
 
 random.seed(0x3f10d933ecfc0a73)
 
 test_streams = 4
 test_outputs = 100
-
-modules = {
-	16: xormix16,
-	24: xormix24,
-	32: xormix32,
-	48: xormix48,
-	64: xormix64,
-	96: xormix96,
-	128: xormix128,
-}
 
 def print_array(name, n, words, cols):
 	limbs = (n + 63) // 64

@@ -1,7 +1,7 @@
 # Copyright (c) 2020-2021 Maarten Baert <info@maartenbaert.be>
 # Available under the MIT License - see LICENSE.txt for details.
 
-import xormix
+import xormix_ref
 
 matrix = [
 	[11, 24, 22,  3, 19],
@@ -57,4 +57,4 @@ shuffle = [
 shifts = [6, 16, 9, 15]
 
 def next_state(state):
-	return xormix.next_state(matrix, salts, shuffle, shifts, state)
+	return xormix_ref.next_state(matrix, salts, shuffle, shifts, state)

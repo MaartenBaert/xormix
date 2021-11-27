@@ -5,27 +5,11 @@ from pylab import *
 
 import random
 
-import xormix16
-import xormix24
-import xormix32
-import xormix48
-import xormix64
-import xormix96
-import xormix128
+from xormix_all import modules
 
 test_bits = 8
 test_streams = 1
 test_outputs = 2**(2 * test_bits)
-
-modules = {
-	16: xormix16,
-	24: xormix24,
-	32: xormix32,
-	48: xormix48,
-	64: xormix64,
-	96: xormix96,
-	128: xormix128,
-}
 
 def make_randogram(n):
 	state = [random.getrandbits(n) for i in range(test_streams + 1)]

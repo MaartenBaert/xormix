@@ -4,25 +4,9 @@
 import math
 import random
 
-import xormix16
-import xormix24
-import xormix32
-import xormix48
-import xormix64
-import xormix96
-import xormix128
+from xormix_all import modules
 
 random.seed(0x75cf32031077f039)
-
-modules = {
-	16: xormix16,
-	24: xormix24,
-	32: xormix32,
-	48: xormix48,
-	64: xormix64,
-	96: xormix96,
-	128: xormix128,
-}
 
 def generate_rtl(n, filename):
 	l = math.ceil(math.log10(n))
