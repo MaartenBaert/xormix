@@ -6,7 +6,7 @@ project(xormix VERSION 0.0.0)
 
 option(BUILD_TOOL "Build xormix-tool executable" ON)
 option(BUILD_TESTS "Build xormix-tests executable" ON)
-option(BUILD_AVALANCHE "Build xormix_avalanche python module (requires pybind11)" OFF)
+option(BUILD_PYTHON "Build xormix_avalanche python module (requires pybind11)" OFF)
 
 include(FeatureSummary)
 
@@ -36,7 +36,7 @@ if(BUILD_TESTS)
 	target_include_directories(xormix-tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
 
-if(BUILD_AVALANCHE)
+if(BUILD_PYTHON)
 	
 	find_package(pybind11 REQUIRED)
 	

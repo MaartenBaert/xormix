@@ -115,51 +115,10 @@ def avalanche_test(n, rounds):
 	with open('avalanche-results.txt', 'a') as f:
 		f.write(f'avalanche_test({n}, {rounds}): [{shifts[0]:2} {shifts[1]:2} {shifts[2]:2} {shifts[3]:2}] ({rounds} rounds, {total_trials} trials)\n')
 
-if len(sys.argv) != 3:
-	print('Usage: avalanche.py <wordsize> <rounds>')
-	sys.exit(1)
+if __name__ == "__main__":
 
-avalanche_test(int(sys.argv[1]), int(sys.argv[2]))
+	if len(sys.argv) != 3:
+		print('Usage: avalanche_test.py <wordsize> <rounds>')
+		sys.exit(1)
 
-#for rounds in [6, 7, 8]:
-	#avalanche_test(16, rounds)
-#for rounds in [6, 7, 8]:
-	#avalanche_test(24, rounds)
-#for rounds in [7, 8, 9]:
-	#avalanche_test(32, rounds)
-#for rounds in [7, 8, 9]:
-	#avalanche_test(48, rounds)
-#for rounds in [8, 9, 10]:
-	#avalanche_test(64, rounds)
-#for rounds in [8, 9, 10]:
-	#avalanche_test(96, rounds)
-#for rounds in [9, 10, 11]:
-	#avalanche_test(128, rounds)
-
-#avalanche_test(16, 8)
-# Best result: [ 1  8  5  6] (7 rounds, 20637817 trials)
-# Best result: [ 4  8  5  7] (8 rounds, 918237815 trials)
-
-#avalanche_test(24, 8)
-# Best result: [ 7 12  9 10] (7 rounds, 10547057 trials)
-# Best result: [ 8 12  9 11] (8 rounds, 734582264 trials)
-
-#avalanche_test(32, 9)
-# Best result: [ 7 16 10 14] (8 rounds, 154021496 trials)
-# Best result: [ 6 16  9 15] (9 rounds, 243066055326 trials)
-
-#avalanche_test(48, 9)
-# Best result: [14 22 21 23] (8 rounds, 10547057 trials)
-# Best result: [19 21 15 22] (9 rounds, 16703334963 trials)
-
-#avalanche_test(64, 10)
-# Best result: [27 30 23 29] (9 rounds, 154021496 trials)
-# Best result: [28 31 24 30] (10 rounds, 155562261043 trials)
-
-#avalanche_test(96, 10)
-# Best result: [39 46 29 47] (9 rounds, 542046 trials)
-# Best result: [42 46 35 43] (10 rounds, 470118270 trials)
-
-#avalanche_test(128, 11)
-# Best result: [56 61 47 59] (10 rounds, 8429651 trials)
-# Best result: [47 61 56 62] (11 rounds, 3502911683 trials)
+	avalanche_test(int(sys.argv[1]), int(sys.argv[2]))
