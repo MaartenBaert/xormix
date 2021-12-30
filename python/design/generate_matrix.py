@@ -1,17 +1,9 @@
 import hashlib
 import numpy
+import sys
 
-unique_factors = {
-	8  : [3, 5, 17],
-	12 : [3, 5, 7, 13],
-	16 : [3, 5, 17, 257],
-	24 : [3, 5, 7, 13, 17, 241],
-	32 : [3, 5, 17, 257, 65537],
-	48 : [3, 5, 7, 13, 17, 97, 241, 257, 673],
-	64 : [3, 5, 17, 257, 641, 65537, 6700417],
-	96 : [3, 5, 7, 13, 17, 97, 193, 241, 257, 673, 65537, 22253377],
-	128: [3, 5, 17, 257, 641, 65537, 274177, 6700417, 67280421310721],
-}
+import xormix_all
+import extract_phases
 
 def make_rng(seed_string):
 	seed_hash = hashlib.sha512(seed_string).digest()
@@ -27,7 +19,7 @@ def test_primitive(n, m):
 	order = 2**n - 1
 	if not test_period(n, m, order):
 		return False
-	for f in unique_factors[n]:
+	for f in xormix_all.unique_factors[n]:
 		if test_period(n, m, order // f):
 			return False
 	return True
@@ -66,9 +58,8 @@ def make_selection(cols, sizes, fanout_min, fanout_max, rng):
 					fanout[table[i, j]] += 1
 	return [table[i][:sizes[i]] for i in range(rows)]
 
-def make_xormix_matrix(n, suffix):
-	global minv, m
-	rng = make_rng(b'xormix%d-xortable' % (n) + suffix)
+def generate_matrix(n, suffix):
+	rng = make_rng(b'xormix%d-xortable' % (n) + suffix.encode())
 	maxcommon = 3
 	maxcount = {
 		16 : 48,
@@ -105,14 +96,28 @@ def make_xormix_matrix(n, suffix):
 			continue
 		return selection
 
-def print_xormix_matrix(n, selection):
+def print_matrix(n, matrix):
 	print('matrix = [')
-	for row in selection:
+	for row in matrix:
 		print('\t[' + ', '.join(f'{x:{len(str(n-1))}d}' for x in row) + '],')
 	print(']')
 
-# for n in [16]:
-# 	selection = make_xormix_matrix(n, b'')
-# 	print(f'xormix{n}:')
-# 	print_xormix_matrix(n, selection)
-# 	print()
+if __name__ == "__main__":
+
+	if len(sys.argv) != 2:
+		print('Usage: generate_matrix.py <wordsize>')
+		sys.exit(1)
+
+	n = int(sys.argv[1])
+	attempt = 33
+	while True:
+		suffix = '' if attempt == 0 else f'-{attempt+1}'
+		matrix = generate_matrix(n, suffix)
+		(phases, rel_dist) = extract_phases.extract_phases(n, matrix)
+		if rel_dist >= 4.0:
+			print()
+			print(f'xormix{n}:')
+			print_matrix(n, matrix)
+			print()
+			break
+		attempt += 1

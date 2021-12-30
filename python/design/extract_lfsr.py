@@ -4,21 +4,21 @@
 import numpy
 import sys
 
-from xormix_all import modules
+import xormix_all
 
 def print_matrix(*args):
 	chars = '·1'
 	print('\n'.join(' | '.join(' '.join(chars[x & 1] for x in row) for row in rows) for rows in zip(*args)))
 
-def extract_matrix(n):
+def extract_matrix(n, matrix):
 	a = numpy.zeros((n, n), dtype=numpy.uint8)
-	for (i, cols) in enumerate(modules[n].matrix):
+	for (i, cols) in enumerate(matrix):
 		a[i, cols] = 1
 	return a
 
-def extract_lfsr(n, aa, show_progress=False):
+def extract_lfsr(n, a, show_progress=False):
 	
-	p = aa.copy()
+	p = a.copy()
 	u = numpy.identity(n, dtype=numpy.uint8)
 	v = numpy.identity(n, dtype=numpy.uint8)
 	
@@ -52,7 +52,7 @@ def extract_lfsr(n, aa, show_progress=False):
 			print_matrix(u, p, v)
 	
 	assert ((numpy.matmul(u, v) & 1) == numpy.identity(n, dtype=numpy.uint8)).all(), 'Invalid u/v matrices'
-	assert (((numpy.matmul(numpy.matmul(u, p), v)) & 1) == extract_matrix(n)).all(), 'Invalid decomposition'
+	assert (((numpy.matmul(numpy.matmul(u, p), v)) & 1) == a).all(), 'Invalid decomposition'
 
 	poly = (1 << n) + sum(p[:, -1].astype(object) << numpy.arange(n, dtype=object))
 	if show_progress:
@@ -67,5 +67,5 @@ if __name__ == "__main__":
 		sys.exit(1)
 
 	n = int(sys.argv[1])
-	a = extract_matrix(n)
+	a = extract_matrix(n, xormix_all.modules[n].matrix)
 	extract_lfsr(n, a, show_progress=True)

@@ -74,7 +74,7 @@ The method described in the article above simply counts the number of flipped bi
 
 This method is still relatively slow, especially if we want to find very weak biases over a larger number of cycles, which may require millions or even billions of trials. But it is still much faster than regular randomness testing. With this method it is feasible to exhaustively test all possible parameter value combinations, which is what I did for xormix.
 
-The avalanche testing code I used can be found in `cpp/design/avalanche.cpp` and `python/design/avalanche.py`.
+The avalanche testing code I used can be found in `cpp/design/avalanche.cpp` and `python/design/avalanche_test.py`.
 
 ### Uniformly distributed seeds
 

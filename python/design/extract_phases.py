@@ -6,16 +6,16 @@ import numpy
 import random
 import sys
 
+import xormix_ref
+import xormix_all
 import extract_lfsr
-import generate_matrix
 
-from xormix_all import modules, factors
 from xormix_discrete_log import *
 
 def is_primitive(n, gen, poly):
 	if gf_pow(n, gen, 2**n - 1, poly) != 1:
 		return False
-	for f in factors[n]:
+	for f in xormix_all.factors[n]:
 		assert (2**n - 1) % f == 0
 		if gf_pow(n, gen, (2**n - 1) // f, poly) == 1:
 			return False
@@ -24,7 +24,7 @@ def is_primitive(n, gen, poly):
 def discrete_log(n, val, gen, poly):
 	m = 1
 	res = 0
-	for f in factors[n]:
+	for f in xormix_all.factors[n]:
 		subval = gf_pow(n, val, (2**n - 1) // (m * f), poly)
 		subgen = gf_pow(n, gen, (2**n - 1) // f, poly)
 		k = bsgs(n, subval, subgen, f, poly)
@@ -51,7 +51,7 @@ def generate_lfsr_output(n, state, poly, count):
 			state ^= poly
 	return output
 
-def extract_phases(n, show_progress=False, check_brute_force=False):
+def extract_phases(n, matrix, show_progress=False, check_brute_force=False):
 
 	digits = math.floor(math.log10(n)) + 1
 
@@ -59,7 +59,7 @@ def extract_phases(n, show_progress=False, check_brute_force=False):
 		print(f'Bit phases for xormix{n}:')
 
 	# extract matrices and polynomial
-	a = extract_lfsr.extract_matrix(n)
+	a = extract_lfsr.extract_matrix(n, matrix)
 	(poly, u, v) = extract_lfsr.extract_lfsr(n, a)
 	assert is_primitive(n, 2, poly), 'Invalid polynomial'
 
@@ -68,7 +68,8 @@ def extract_phases(n, show_progress=False, check_brute_force=False):
 	for i in range(n):
 		for j in range(n):
 			assert ((state[0] >> j) & 1) == u[j, i], 'Xormix output does not match U matrix!'
-		modules[n].next_state(state)
+		m = xormix_all.modules[n]
+		xormix_ref.next_state(matrix, m.salts, m.shuffle, m.shifts, state)
 
 	phases = [0] * n
 	for i in range(n):
@@ -114,7 +115,7 @@ def extract_phases(n, show_progress=False, check_brute_force=False):
 	print('Minimum distance:', min(distances))
 	print('Relative minimum distance:', rel_dist)
 
-	return rel_dist
+	return (phases, rel_dist)
 
 if __name__ == "__main__":
 
@@ -123,17 +124,4 @@ if __name__ == "__main__":
 		sys.exit(1)
 
 	n = int(sys.argv[1])
-	extract_phases(n, show_progress=True)
-
-# for n in [64]:
-# 	for i in range(6, 1000):
-# 		suffix = '' if i == 0 else f'-{i+1}'
-# 		selection = generate_matrix.make_xormix_matrix(n, suffix.encode())
-# 		extract_lfsr.modules[n].matrix = selection
-# 		rel_dist = extract_phases(n)
-# 		if rel_dist >= 4.0:
-# 			print()
-# 			print(f'xormix{n}:')
-# 			generate_matrix.print_xormix_matrix(n, selection)
-# 			print()
-# 			break
+	extract_phases(n, xormix_all.modules[n].matrix, show_progress=True)
