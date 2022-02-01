@@ -1,0 +1,8 @@
+{ signal: [
+	{ name: "clk"   , wave: "p...................." },
+	{ name: "rst"   , wave: "0.1..0..............." },
+	{ name: "seed_x", wave: "x..3.x...............", data: ["SX"] },
+	{ name: "seed_y", wave: "x..3.x...............", data: ["SY"] },
+	{ name: "enable", wave: "x....1...0..1.010.1.." },
+	{ name: "result", wave: "x...3.5555...55.5..55", data: ["SY", "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8"] }
+]}

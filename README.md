@@ -22,20 +22,23 @@ Xormix generators with various word sizes and number of parallel output streams 
 
 Note: Gate/LUT counts are approximate, actual results may vary depending on how smart the synthesis tool is.
 
-The properties of a xormix variant with word size N and number of streams S can be calculated using the following formulas:
+The properties of a xormix variant with word size `N` and number of streams `S` can be calculated using the following formulas:
 
 	minimum guaranteed period = 2^N - 1
-	maximum number of streams = N
+	number of streams (S) = 1 ... N
 	number of output bits = S * N
 	number of logic gates (for ASIC) = (5 * S + 4.5) * N
 	number of 6-input LUTs (for FPGA) = (S + 1) * N
 	number of flip-flops = (S + 1) * N
+
+For applications where the randomness quality is not critical, I recommend the xormix32 variant. When operated at 100 MHz, the minimum period of `2^32 - 1` ensures good quality output for at least 43 seconds (in practice it is almost always much longer, but you should not rely on that). For applications where the randomness quality is critical, I recommend the xormix64 variant. Even when operated at 1 GHz, the minimum period of `2^64 - 1` guarantees good quality output for at least 585 years, which should be enough for any application. The larger variants are provided primarily to simplify seed management. If you use many instances of the same random number generator, you need to take care that you don't accidentally use the same seed value twice. With xormix64 this probability is already very low, but with a large enough number of instances it may still happen due to the [birthday paradox](https://en.wikipedia.org/wiki/Birthday_problem). If you are using xormix in such an application and you don't want to carefully manage your seed values, you might want to use xormix128 such that you can just choose random seed values and still have a negligibly low risk of collisions.
 
 Documentation
 -------------
 
 - [Xormix Algorithm](doc/algorithm.md)
 - [Xormix Design Criteria](doc/design-criteria.md)
+- [Xormix Hardware Module (VHDL/Verilog) Interface](doc/hardware-interface.md)
 
 Implementations
 ---------------

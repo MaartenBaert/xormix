@@ -6,7 +6,7 @@ This document provides a short summary of the xormix algorithm. For a complete d
 Structure
 ---------
 
-The xormix pseudorandom number generator consists of two stages. The first stage has `N` state bits where `N` can be 16, 24, 32, 48, 64, 96 or 128. The second stage has `N * S` state bits, where `S` is the number of parallel streams. The state of the first stage is referred to as `X`, the state of the second stage is referred to as `Y`. Each cycle, `X` is updated using a linear function that depends only on the previous value of `X`, while `Y` is updated using a nonlinear function that depends on both `X` and `Y`. `Y` also serves as the output of the random number generator.
+The xormix pseudorandom number generator consists of two stages. The first stage has `N` state bits where `N` can be 16, 24, 32, 48, 64, 96 or 128. The second stage has `S * N` state bits, where `S` is the number of parallel streams. The state of the first stage is referred to as `X`, the state of the second stage is referred to as `Y`. Each cycle, `X` is updated using a linear function that depends only on the previous value of `X`, while `Y` is updated using a nonlinear function that depends on both `X` and `Y`. `Y` also serves as the output of the random number generator.
 
 For the simplest case with only one parallel output stream (i.e. `S` is 1), the random number generator is structured as shown in this block diagram:
 
@@ -23,27 +23,27 @@ First stage
 
 The first stage is fully linear and has N state bits. It is conceptually similar to a plain [xorshift](https://en.wikipedia.org/wiki/Xorshift) generator, however instead of using only simple bit shift operations, it combines bits in a more arbitrary way. This is possible at no extra cost because bit shuffling is essentially free in hardware. The update function is specifically chosen to have a period of `2**N - 1`, just like a xorshift generator. The exact definition of the X update function depends on `N`. As an example, the X update function for xormix16 is as follows:
 
-	X'[ 0] = X[10] xor X[12] xor X[ 2] xor X[ 8] xor X[15]
-	X'[ 1] = X[15] xor X[10] xor X[ 7] xor X[14] xor X[13] xor X[ 5]
-	X'[ 2] = X[10] xor X[ 9] xor X[ 4] xor X[ 7] xor X[ 0]
-	X'[ 3] = X[14] xor X[ 0] xor X[ 3] xor X[ 8] xor X[ 9] xor X[ 1]
-	X'[ 4] = X[ 1] xor X[ 3] xor X[ 9] xor X[12] xor X[13]
-	X'[ 5] = X[ 7] xor X[ 2] xor X[12] xor X[ 9] xor X[11] xor X[15]
-	X'[ 6] = X[ 1] xor X[ 2] xor X[ 4] xor X[ 3] xor X[ 0]
-	X'[ 7] = X[10] xor X[ 6] xor X[ 3] xor X[ 0] xor X[ 4] xor X[11]
-	X'[ 8] = X[ 2] xor X[ 7] xor X[13] xor X[ 6] xor X[ 8]
-	X'[ 9] = X[ 5] xor X[ 0] xor X[12] xor X[ 3] xor X[15] xor X[ 9]
-	X'[10] = X[13] xor X[ 0] xor X[ 9] xor X[ 4] xor X[ 8]
-	X'[11] = X[ 1] xor X[ 5] xor X[12] xor X[ 6] xor X[13] xor X[ 4]
-	X'[12] = X[12] xor X[ 1] xor X[ 6] xor X[10] xor X[14]
-	X'[13] = X[11] xor X[15] xor X[ 8] xor X[ 7] xor X[ 5] xor X[ 1]
-	X'[14] = X[10] xor X[11] xor X[ 2] xor X[ 0] xor X[ 5]
-	X'[15] = X[ 6] xor X[14] xor X[12] xor X[11] xor X[ 5] xor X[ 9]
+	X'[ 0] = X[ 3] xor X[11] xor X[ 1] xor X[ 4] xor X[13]
+	X'[ 1] = X[11] xor X[12] xor X[10] xor X[ 2] xor X[ 8] xor X[ 9]
+	X'[ 2] = X[ 0] xor X[10] xor X[11] xor X[ 4] xor X[15]
+	X'[ 3] = X[ 1] xor X[11] xor X[13] xor X[ 0] xor X[ 6] xor X[10]
+	X'[ 4] = X[ 8] xor X[ 3] xor X[ 6] xor X[ 1] xor X[ 7]
+	X'[ 5] = X[ 3] xor X[ 5] xor X[ 4] xor X[ 1] xor X[14] xor X[ 6]
+	X'[ 6] = X[ 8] xor X[ 7] xor X[12] xor X[11] xor X[13]
+	X'[ 7] = X[14] xor X[ 7] xor X[ 8] xor X[ 5] xor X[13] xor X[10]
+	X'[ 8] = X[ 7] xor X[ 0] xor X[ 4] xor X[12] xor X[13]
+	X'[ 9] = X[15] xor X[ 3] xor X[ 9] xor X[ 2] xor X[11] xor X[ 5]
+	X'[10] = X[ 0] xor X[ 9] xor X[ 6] xor X[11] xor X[ 4]
+	X'[11] = X[12] xor X[15] xor X[ 2] xor X[ 3] xor X[14] xor X[ 0]
+	X'[12] = X[14] xor X[ 3] xor X[ 9] xor X[13] xor X[ 0]
+	X'[13] = X[ 6] xor X[10] xor X[12] xor X[ 7] xor X[ 2] xor X[ 1]
+	X'[14] = X[ 5] xor X[ 7] xor X[ 1] xor X[15] xor X[ 6]
+	X'[15] = X[ 0] xor X[ 7] xor X[10] xor X[14] xor X[ 9] xor X[ 1]
 
 Second stage
 ------------
 
-The second stage is nonlinear and has `N * S` state bits. It uses a nonlinear invertible recurrence relation inspired by the [Trivium](https://en.wikipedia.org/wiki/Trivium_%28cipher%29) stream cipher. In addition to transforming the Y state, the recurrence relation also mixes in a shuffled version of the X state where some bits are inverted. The shuffling scheme is a crucial part of the parallel output stream mechanism described later. Like the X stage, the exact definition of the Y update function depends on `N`. For example, the recurrence relation used for xormix16 with a single output stream is shown in this block diagram:
+The second stage is nonlinear and has `S * N` state bits. It uses a nonlinear invertible recurrence relation inspired by the [Trivium](https://en.wikipedia.org/wiki/Trivium_%28cipher%29) stream cipher. In addition to transforming the Y state, the recurrence relation also mixes in a shuffled version of the X state where some bits are inverted. The shuffling scheme is a crucial part of the parallel output stream mechanism described later. Like the X stage, the exact definition of the Y update function depends on `N`. For example, the recurrence relation used for xormix16 with a single output stream is shown in this block diagram:
 
 ![Block diagram](img/diagram-recurrence-single-stream.svg)
 
@@ -51,7 +51,7 @@ When multiple parallel output streams are used, the recurrence relation becomes:
 
 ![Block diagram](img/diagram-recurrence-multi-stream.svg)
 
-Note that in both cases, this recurrence relation is unrolled `N` times in order to produce `N * S` new state bits each cycle. The mixed-in data is simply the X state from the first stage, but shuffled and with some bits inverted:
+Note that in both cases, this recurrence relation is unrolled `N` times in order to produce `S * N` new state bits each cycle. The mixed-in data is simply the X state from the first stage, but shuffled and with some bits inverted:
 
 	mixin[i][j] = (X xor salts[i])[(i + shuffle[j]) % N]
 

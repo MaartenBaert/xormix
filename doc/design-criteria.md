@@ -91,8 +91,9 @@ Two-stage PRNG structure
 
 As discussed earlier, linear and nonlinear PRNGs both have some benefits and some drawbacks. In order to combine the best properties of linear and nonlinear PRNGs, xormix uses a two-stage structure where the first stage is linear, and the second stage is nonlinear. The output of the first stage is mixed into the state of the second stage, and the state of the second stage also serves as the output of the PRNG. In a sense, the second stage can be viewed as an output function for the first stage. The two stages were designed independently, but with different goals in mind. The first stage is responsible for giving the PRNG a minimum guaranteed period of `2^N-1` and is designed to be as random as possible on its own. The second stage is designed to mix up the output of the first stage as much as possible in a nonlinear way, and destroys any patterns that may still be present in the output from the first stage. It also extends the output from `N` bits to `N * S` bits with a very low hardware cost. The second stage also increases the average period of the PRNG dramatically, however this isn't the primary goal.
 
-First stage
------------
+The following sections will focus on how the 'magic constants' for xormix were chosen. For a detailed description of the xormix algorithm, refer to the [Xormix Algorithm](doc/algorithm.md) page.
+
+### First stage
 
 The first stage is essentially a generalization of the [xorshift](https://en.wikipedia.org/wiki/Xorshift) random number generator. In a xorshift PRNG, the state is transformed by repeated shifting and XOR-ing with itself, such that each new state bit is the XOR combination of several previous state bits. For specific shift combinations, it can be shown that this PRNG has a period of `2^N-1`, going through every possible state except zero. In fact, it has been proven that [for each xorshift PRNG there exists an equivalent LFSR which produces the exact same output](https://www.jstatsoft.org/article/view/v011i05). The equivalent LFSR polynomial is usually dense, which is good, because dense LFSR are known to have better randomness properties than LFSRs based on sparse polynomials. Since xorshift PRNGs require significantly fewer XOR operations than the equivalent dense LFSR does, it can be seen as a more efficient way to implement a high-quality LFSR.
 
@@ -124,7 +125,8 @@ The design process boils down to picking a matrix `T` with good randomness prope
 2. The number of ones in each column of `T` should be between 4 and 7 (to avoid excessively high fanout and to ensure that all bits are used several times).
 3. Two different rows of `T` should never have more than 3 ones in common, and the number of rows with 3 ones in common should be minimized.
 4. The inverse of `T` should be dense and should not exhibit any obvious patterns.
-5. The PRNG created by `T` should have a period of `2^N-1`.
+5. The PRNG created by `T` should have a period of `2^N - 1`.
+6. The minimum phase difference between the PRNG sequences created by the individual output bits should be relatively high. The average minimum phase difference is `2^N / N^2` and seems to follow a roughly exponential distribution, so we can require that the PRNG has a minimum phase difference of at least `4 * 2^N / N^2`.
 
 Requirements 1 and 2 can be satisfied by construction. I used an algorithm to generate suitable matrices as follows:
 
@@ -133,18 +135,25 @@ Requirements 1 and 2 can be satisfied by construction. I used an algorithm to ge
 - Iterate over all ones in the matrix, and randomly move them to a different column (while staying in the same row). The probability that a one is moved increases with the number of ones that are already in that column.
 - Repeat this until the number of ones in each column is between 4 and 7
 
-This algorithm is repeated until a matrix is found which also satisfies the remaining three requirements. Requirements 3 and 4 are easy to check. Requirement 5 can be checked as follows:
+This algorithm is repeated until a matrix is found which also satisfies the remaining requirements. Requirements 3 and 4 are easy to check. Requirement 5 can be checked as follows:
 
 - Calculate `P = 2^N - 1`.
 - Calculate the prime factors `F1, F2, F3, ...` of `P`.
 - Check that `T^P` is equal to the identity matrix.
 - Check that for each prime factor `Fi`, `T^(P/Fi)` is *not* equal to the identity matrix.
 
+Requirement 6 is a lot more difficult to check because it requires solving a discrete logarithm problem over `GF(2^N)`. I used a variant of the Pohlig-Hellman algorithm to do this, which is still fast enough to be practical even for the 128-bit version of xormix.
 
+### Second stage
 
+The purpose of the second stage is to take the already quite random output of the first stage, and further mix it up in a nonlinear way to eliminate the linearity and increase the number of output bits. The structure of the second stage is inspired by the [Trivium](https://en.wikipedia.org/wiki/Trivium_%28cipher%29) stream cipher, but simplified to reduce the hardware cost. The second stage consists of multiple [nonlinear-feedback shift register](https://en.wikipedia.org/wiki/Nonlinear-feedback_shift_register) (one for each stream) which together form a loop. This results in a nonlinear invertible state-transition function. As discussed earlier, the fact that the state-transition function is invertible results in a much larger average period, which increases the randomness quality of the output.
 
+Since this structure doesn't have a nice mathematical representation, the choice of logic gates and feedback taps was based on randomness testing and especially avalance testing, as discussed earlier. The taps are optimized to provide the strongest avalance effect for the case with only a single output stream, since this is the 'weakest' case. When more output streams are added, the randomness quality increases automatically due to the higher number of state bits. The taps that were finally chosen for each of the xormix variants are the results of several days of avalance testing.
 
+The one remaining design aspect is how the output of the first stage (X) is mixed into the second stage (Y). If there was only one output stream, the it would have been sufficient to just XOR the X state into the Y state. However Y can be much larger than X if there are multiple output streams, so we need to extend X to make it the same length as Y before mixing the states together. Simply repeating X is suboptimal, since that would result in the same bits of X getting mixed together many times in different streams. Instead we do the following:
 
-Second stage
-------------
+- First the X state is XOR-ed with a set of predefined 'salt' values, to provide a different value for each stream. This does not actually add any randomness, but it does make each value unique, which is important because all streams use the same state-transition function. The salts were chosen to have a reasonably large [Hamming distance](https://en.wikipedia.org/wiki/Hamming_distance), but other than that they are entirely random.
 
+- After applying the salts, the bits of the resulting values are rotated by an amount equal to the number of the stream. So the value for the first stream is not rotated, the value for the second stream is rotated by 1 bit, the value for the third stream is rotated by 2 bits, and so on. This ensures that the same bit won't appear twice in the same position.
+
+- Finally the bits for each stream are shuffled according to a predefined scheme. This shuffling scheme is optimized to minimize the number of times that two bits from the first stage will appear at the same distance away from each other in the shift register of the second stage. This ensures that the second stage will not repeatedly mix the same two input bits together, but will instead mix together different combinations of bits for each output stream.
