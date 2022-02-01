@@ -228,7 +228,7 @@ struct xormix {
 		T result = T(words[ii / L].l[ii % L] >> i);
 		for(size_t j = 1; j <= (length + N - 2) / N; ++j) {
 			size_t jj = ii + j;
-			result |= U(words[jj / L].[jj % L]) << (j * N - i - 1) << 1;
+			result |= U(words[jj / L].l[jj % L]) << (j * N - i - 1) << 1;
 		}
 		return result << (T_BITS - length) >> (T_BITS - length);
 	}
