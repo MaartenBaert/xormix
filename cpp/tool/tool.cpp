@@ -336,19 +336,32 @@ int main(int argc, char **argv) {
 		
 		cxxopts::Options options("xormix-tool", "Command-line utility for the xormix random number generator");
 		options.add_options()
-			("h,help"          , "Show this help message"                    , cxxopts::value(g_option_help          )                      )
-			("r,read-seed"     , "Read seed from stdin"                      , cxxopts::value(g_option_read_seed     )                      )
-			("e,write-seed"    , "Write seed to stdout"                      , cxxopts::value(g_option_write_seed    )                      )
-			("o,write-output"  , "Write output to stdout"                    , cxxopts::value(g_option_write_output  )                      )
-			("w,word-size"     , "Word size in bits"                         , cxxopts::value(g_option_word_size     )->default_value("64" ))
-			("s,streams"       , "Number of streams"                         , cxxopts::value(g_option_streams       )->default_value("1"  ))
-			("u,uniform-seeds" , "Number of uniformly distributed seeds"     , cxxopts::value(g_option_uniform_seeds )->default_value("1"  ))
-			("c,output-cycles" , "Number of output cycles [0 means infinite]", cxxopts::value(g_option_output_cycles )->default_value("0"  ))
-			("t,short-seed"    , "Use simplified seeding with short seeds"   , cxxopts::value(g_option_short_seed    )                      )
-			("d,discard-cycles", "Number of cycles to discard after seeding" , cxxopts::value(g_option_discard_cycles)->default_value("0"  ))
-			("p,repeats"       , "Number of repeats [0 means infinite]"      , cxxopts::value(g_option_repeats       )->default_value("1"  ))
-			("i,input-format"  , "Input format [bin, hex, vhdl or verilog]"  , cxxopts::value(g_option_input_format  )->default_value("hex"))
-			("f,output-format" , "Output format [bin, hex, vhdl or verilog]" , cxxopts::value(g_option_output_format )->default_value("hex"))
+			("h,help"          , "Show this help message",
+				cxxopts::value(g_option_help))
+			("r,read-seed"     , "Read seed from stdin, rather than randomly generating one",
+				cxxopts::value(g_option_read_seed))
+			("e,write-seed"    , "Write seed to stdout",
+				cxxopts::value(g_option_write_seed))
+			("o,write-output"  , "Write output to stdout",
+				cxxopts::value(g_option_write_output))
+			("w,word-size"     , "Word size in bits [16, 24, 32, 48, 64, 96 or 128]",
+				cxxopts::value(g_option_word_size)->default_value("64"))
+			("s,streams"       , "Number of output streams",
+				cxxopts::value(g_option_streams)->default_value("1"))
+			("u,uniform-seeds" , "Number of parallel instances with uniformly distributed seeds",
+				cxxopts::value(g_option_uniform_seeds)->default_value("1"))
+			("c,output-cycles" , "Number of output cycles [0 means infinite]",
+				cxxopts::value(g_option_output_cycles)->default_value("0"))
+			("t,short-seed"    , "Use simplified seeding procedure with short seeds",
+				cxxopts::value(g_option_short_seed))
+			("d,discard-cycles", "Number of cycles to discard after seeding, typically used with short seeds",
+				cxxopts::value(g_option_discard_cycles)->default_value("0"))
+			("p,repeats"       , "Number of times to repeat the whole command, useful for repeated reseeding [0 means infinite]",
+				cxxopts::value(g_option_repeats)->default_value("1"))
+			("i,input-format"  , "Input format [bin, hex, vhdl or verilog]",
+				cxxopts::value(g_option_input_format)->default_value("hex"))
+			("f,output-format" , "Output format [bin, hex, vhdl or verilog]",
+				cxxopts::value(g_option_output_format)->default_value("hex"))
 		;
 		options.parse(argc, argv);
 		
