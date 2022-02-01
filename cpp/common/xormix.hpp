@@ -6,6 +6,8 @@
 #include <cstdint>
 
 #include <initializer_list>
+#include <limits>
+#include <type_traits>
 
 // T = limb type
 // N = bits per limb
@@ -23,7 +25,7 @@ struct xormix {
 	static constexpr size_t N_ = N;
 	static constexpr size_t L_ = L;
 	static constexpr size_t WORD_BYTES = N * L / 8;
-	static constexpr size_t LIMB_BITS = 8 * sizeof(limb_t);
+	static constexpr size_t LIMB_BITS = std::numeric_limits<limb_t>::digits;
 	static constexpr limb_t MASK = (N == LIMB_BITS)? -limb_t(1) : (limb_t(1) << N) - limb_t(1);
 	
 	static const std::initializer_list<word_t> TEST_PERIODS;
@@ -46,7 +48,7 @@ struct xormix {
 		size_t rem = 0;
 		for(size_t ii = L; ii-- > 0; ) {
 			for(size_t i = N; i-- > 0; ) {
-				bool overflow = rem >> (8 * sizeof(size_t) - 1);
+				bool overflow = rem >> (std::numeric_limits<size_t>::digits - 1);
 				rem = (rem << 1) | 1;
 				if(overflow || rem >= div) {
 					rem -= div;
@@ -214,6 +216,21 @@ struct xormix {
 			words[w] = word;
 		}
 		return bytes;
+	}
+	
+	template<typename T>
+	static T slice_words(const word_t *words, size_t num_words, size_t offset, size_t length) {
+		constexpr size_t T_BITS = std::numeric_limits<T>::digits + std::numeric_limits<T>::is_signed;
+		typedef typename std::conditional<(T_BITS > LIMB_BITS), T, limb_t>::type U;
+		if(length == 0)
+			return T(0);
+		size_t ii = offset / N, i = offset % N;
+		T result = T(words[ii / L].l[ii % L] >> i);
+		for(size_t j = 1; j <= (length + N - 2) / N; ++j) {
+			size_t jj = ii + j;
+			result |= U(words[jj / L].[jj % L]) << (j * N - i - 1) << 1;
+		}
+		return result << (T_BITS - length) >> (T_BITS - length);
 	}
 	
 };
