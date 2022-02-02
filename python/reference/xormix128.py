@@ -3,6 +3,8 @@
 
 import xormix_ref
 
+revision = 1
+
 matrix = [
 	[ 93,  67,  22, 113,  35],
 	[ 38,  84,  91,  47,  95, 124],

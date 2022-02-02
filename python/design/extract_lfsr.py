@@ -7,7 +7,7 @@ import sys
 import xormix_all
 
 def print_matrix(*args):
-	chars = '·1'
+	chars = '-1'
 	print('\n'.join(' | '.join(' '.join(chars[x & 1] for x in row) for row in rows) for rows in zip(*args)))
 
 def extract_matrix(n, matrix):
@@ -16,7 +16,7 @@ def extract_matrix(n, matrix):
 		a[i, cols] = 1
 	return a
 
-def extract_lfsr(n, a, show_progress=False):
+def extract_lfsr(n, a, show_result=False, show_progress=False):
 	
 	p = a.copy()
 	u = numpy.identity(n, dtype=numpy.uint8)
@@ -54,8 +54,12 @@ def extract_lfsr(n, a, show_progress=False):
 	assert ((numpy.matmul(u, v) & 1) == numpy.identity(n, dtype=numpy.uint8)).all(), 'Invalid u/v matrices'
 	assert (((numpy.matmul(numpy.matmul(u, p), v)) & 1) == a).all(), 'Invalid decomposition'
 
+	if show_result and not show_progress:
+		print(f'LFSR Matrices:')
+		print_matrix(u, p, v)
+
 	poly = (1 << n) + sum(p[:, -1].astype(object) << numpy.arange(n, dtype=object))
-	if show_progress:
+	if show_result:
 		print(f'Polynomial: 0x{poly:0{n//4+1}x}')
 
 	return (poly, u, v)
@@ -68,4 +72,4 @@ if __name__ == "__main__":
 
 	n = int(sys.argv[1])
 	a = extract_matrix(n, xormix_all.modules[n].matrix)
-	extract_lfsr(n, a, show_progress=True)
+	extract_lfsr(n, a, show_result=True)

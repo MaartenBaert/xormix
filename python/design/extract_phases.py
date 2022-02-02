@@ -51,12 +51,9 @@ def generate_lfsr_output(n, state, poly, count):
 			state ^= poly
 	return output
 
-def extract_phases(n, matrix, show_progress=False, check_brute_force=False):
+def extract_phases(n, matrix, show_result=False, check_brute_force=False):
 
 	digits = math.floor(math.log10(n)) + 1
-
-	if show_progress:
-		print(f'Bit phases for xormix{n}:')
 
 	# extract matrices and polynomial
 	a = extract_lfsr.extract_matrix(n, matrix)
@@ -84,7 +81,8 @@ def extract_phases(n, matrix, show_progress=False, check_brute_force=False):
 		phases[i] = discrete_log(n, state, 2, poly)
 		assert gf_pow(n, 2, phases[i], poly) == state, 'Discrete log does not match!'
 
-		print(f'Bit {i:{digits}d}: output=0x{output_int:0{n//4}x} lfsr=0x{state:0{n//4}x} phase=0x{phases[i]:0{n//4}x}')
+		if show_result:
+			print(f'\tBit {i:{digits}d}: output=0x{output_int:0{n//4}x} lfsr=0x{state:0{n//4}x} phase=0x{phases[i]:0{n//4}x}')
 
 	if check_brute_force:
 		print(f'Brute force search:')
@@ -101,7 +99,8 @@ def extract_phases(n, matrix, show_progress=False, check_brute_force=False):
 						if state2 & 1:
 							state2 ^= poly
 						state2 >>= 1
-					print(f'Bit {j:{digits}d}: output=0x{output:0{n//4}x} lfsr=0x{state2:0{n//4}x} phase=0x{phases2[j]:0{n//4}x}')
+					if show_result:
+						print(f'\tBit {j:{digits}d}: output=0x{output:0{n//4}x} lfsr=0x{state2:0{n//4}x} phase=0x{phases2[j]:0{n//4}x}')
 			state <<= 1
 			if state >> n:
 				state ^= poly
@@ -112,8 +111,9 @@ def extract_phases(n, matrix, show_progress=False, check_brute_force=False):
 	distances = [(sorted_phases[i] - sorted_phases[i - 1]) % (2**n - 1) for i in range(n)]
 	rel_dist = min(distances) / (2**n / n**2)
 
-	print('Minimum distance:', min(distances))
-	print('Relative minimum distance:', rel_dist)
+	if show_result:
+		print(f'\tMinimum distance: {min(distances)}')
+		print(f'\tRelative minimum distance: {rel_dist:.3f}')
 
 	return (phases, rel_dist)
 
@@ -124,4 +124,4 @@ if __name__ == "__main__":
 		sys.exit(1)
 
 	n = int(sys.argv[1])
-	extract_phases(n, xormix_all.modules[n].matrix, show_progress=True)
+	extract_phases(n, xormix_all.modules[n].matrix, show_result=True)
