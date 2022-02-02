@@ -1,4 +1,4 @@
-Mathematical properties of xormix variants
+Mathematical Properties of Xormix Variants
 ==========================================
 
 This page lists the 'magic constants' and the resulting mathematical properties of each of the xormix variants:
@@ -10,6 +10,11 @@ This page lists the 'magic constants' and the resulting mathematical properties 
 - [Xormix64](mathematical-properties-xormix64.md)
 - [Xormix96](mathematical-properties-xormix96.md)
 - [Xormix128](mathematical-properties-xormix128.md)
+
+These pages are just raw data dumps. The [Xormix Algorithm](doc/algorithm.md) page explains the usage of these values.
+
+LFSR decomposition
+------------------
 
 The LFSR decomposition works as follows. The state-transition matrix A can be decomposed into:
 
