@@ -21,6 +21,7 @@ enum format_t {
 };
 
 bool g_option_help;
+bool g_option_version;
 bool g_option_read_seed;
 bool g_option_write_seed;
 bool g_option_write_output;
@@ -338,6 +339,8 @@ int main(int argc, char **argv) {
 		options.add_options()
 			("h,help"          , "Show this help message",
 				cxxopts::value(g_option_help))
+			("v,version"       , "Show version numbers",
+				cxxopts::value(g_option_version))
 			("r,read-seed"     , "Read seed from stdin, rather than randomly generating one",
 				cxxopts::value(g_option_read_seed))
 			("e,write-seed"    , "Write seed to stdout",
@@ -365,13 +368,24 @@ int main(int argc, char **argv) {
 		;
 		options.parse(argc, argv);
 		
-		if(!g_option_help && !g_option_write_seed && !g_option_write_output) {
+		if(!g_option_help && !g_option_version && !g_option_write_seed && !g_option_write_output) {
 			std::cerr << "Error: No action specified (-e or -o is required)" << std::endl;
 			std::cerr << options.help() << std::endl;
 			return EXIT_FAILURE;
 		}
 		if(g_option_help) {
 			std::cout << options.help() << std::endl;
+			return EXIT_SUCCESS;
+		}
+		if(g_option_version) {
+			std::cout << "Xormix revisions:" << std::endl;
+			std::cout << "  xormix16: " << xormix16::REVISION << std::endl;
+			std::cout << "  xormix24: " << xormix24::REVISION << std::endl;
+			std::cout << "  xormix32: " << xormix32::REVISION << std::endl;
+			std::cout << "  xormix48: " << xormix48::REVISION << std::endl;
+			std::cout << "  xormix64: " << xormix64::REVISION << std::endl;
+			std::cout << "  xormix96: " << xormix96::REVISION << std::endl;
+			std::cout << "  xormix128: " << xormix128::REVISION << std::endl;
 			return EXIT_SUCCESS;
 		}
 		

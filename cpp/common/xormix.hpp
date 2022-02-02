@@ -28,6 +28,7 @@ struct xormix {
 	static constexpr size_t LIMB_BITS = std::numeric_limits<limb_t>::digits;
 	static constexpr limb_t MASK = (N == LIMB_BITS)? -limb_t(1) : (limb_t(1) << N) - limb_t(1);
 	
+	static const size_t REVISION;
 	static const std::initializer_list<word_t> TEST_PERIODS;
 	static const matrix_t XORMIX_MATRIX;
 	static const word_t XORMIX_SALTS[N * L];
