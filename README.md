@@ -40,6 +40,7 @@ Documentation
 - [Xormix Design Criteria](doc/design-criteria.md)
 - [Xormix Hardware Module (VHDL/Verilog) Interface](doc/hardware-interface.md)
 - [Mathematical Properties of Xormix Variants](doc/mathematical-properties.md)
+- [Randomness Test Results](doc/randomness-test-results.md)
 
 Implementations
 ---------------
