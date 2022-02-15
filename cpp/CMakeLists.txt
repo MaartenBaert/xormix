@@ -8,6 +8,8 @@ option(BUILD_TOOL "Build xormix-tool executable" ON)
 option(BUILD_TESTS "Build xormix-tests executable" ON)
 option(BUILD_PYTHON "Build xormix_avalanche python module (requires pybind11)" OFF)
 
+option(WITH_GETRANDOM "Use the getrandom() system call instead of /dev/urandom (requires Linux 3.17 or newer)" ON)
+
 include(FeatureSummary)
 
 if(BUILD_TOOL)
@@ -20,6 +22,9 @@ if(BUILD_TOOL)
 		tool/tool.cpp
 	)
 	target_include_directories(xormix-tool PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+	target_compile_definitions(xormix-tool PRIVATE
+		-DXORMIX_WITH_GETRANDOM=$<BOOL:${WITH_GETRANDOM}>
+	)
 endif()
 
 if(BUILD_TESTS)

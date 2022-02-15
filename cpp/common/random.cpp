@@ -8,19 +8,40 @@
 #if defined(__linux__)
 
 #include <errno.h>
+
+#if XORMIX_WITH_GETRANDOM
 #include <sys/random.h>
+#else
+#include <fcntl.h>
+#include <unistd.h>
+#endif
 
 void get_true_randomness(void *data, size_t size) {
+#if !XORMIX_WITH_GETRANDOM
+	int f = open("/dev/urandom", O_RDONLY);
+	if(f == -1)
+		throw std::runtime_error("Failed to open /dev/urandom");
+#endif
 	size_t pos = 0;
 	while(pos < size) {
+#if XORMIX_WITH_GETRANDOM
 		ssize_t res = getrandom((char*) data + pos, size - pos, 0);
+#else
+		ssize_t res = read(f, (char*) data + pos, size - pos);
+#endif
 		if(res < 0) {
 			if(errno == EAGAIN)
 				continue;
+#if !XORMIX_WITH_GETRANDOM
+			close(f);
+#endif
 			throw std::runtime_error("Failed to get true randomness");
 		}
 		pos += res;
 	}
+#if !XORMIX_WITH_GETRANDOM
+	close(f);
+#endif
 }
 
 #elif defined(_WIN32)
