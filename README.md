@@ -31,7 +31,9 @@ The properties of a xormix variant with word size `N` and number of streams `S` 
 	number of 6-input LUTs (for FPGA) = (S + 1) * N
 	number of flip-flops = (S + 1) * N
 
-For applications where the randomness quality is not critical, I recommend the xormix32 variant. When operated at 100 MHz, the minimum period of `2^32 - 1` ensures good quality output for at least 43 seconds (in practice it is almost always much longer, but you should not rely on that). For applications where the randomness quality is critical, I recommend the xormix64 variant. Even when operated at 1 GHz, the minimum period of `2^64 - 1` guarantees good quality output for at least 585 years, which should be enough for any application. The larger variants are provided primarily to simplify seed management. If you use many instances of the same random number generator, you need to take care that you don't accidentally use the same seed value twice. With xormix64 this probability is already very low, but with a large enough number of instances it may still happen due to the [birthday paradox](https://en.wikipedia.org/wiki/Birthday_problem). If you are using xormix in such an application and you don't want to carefully manage your seed values, you might want to use xormix128 such that you can just choose random seed values and still have a negligibly low risk of collisions.
+For applications where the randomness quality is not critical, I recommend the xormix32 variant. When operated at 100 MHz, the minimum period of `2^32 - 1` ensures good quality output for at least 43 seconds (in practice it is almost always much longer, but you should not rely on that). However for applications where the randomness quality is critical, I recommend the xormix64 variant instead. Even when operated at 1 GHz, the minimum period of `2^64 - 1` guarantees good quality output for at least 585 years, which should be enough for any application. The larger variants are provided primarily to simplify seed management. If you use many instances of the same random number generator, you need to take care that you don't accidentally use the same seed value twice. With xormix64 this probability is already very low, but with a large enough number of instances it may still happen due to the [birthday paradox](https://en.wikipedia.org/wiki/Birthday_problem). If you are using xormix in such an application and you don't want to carefully manage your seed values, you might want to use xormix128 such that you can just choose random seed values and still have a negligibly low risk of collisions.
+
+Xormix has been extensively tested with three different randomness test suites (PractRand, TestU01 and Dieharder). As expected some weaknesses were detected in xormix16 and to a lesser extent xormix24, but xormix32 and above passed all randomness tests. The full results can be found [here](doc/randomness-test-results.md).
 
 Documentation
 -------------
@@ -61,3 +63,8 @@ The xormix implementations (software and hardware) and related tools are availab
 - PCG: Available under the Apache License 2.0 (see `LICENSE-pcg.txt`).
 
 All of these are permissive licenses which permit commercial use.
+
+Acknowledgments
+---------------
+
+Xormix uses ideas inspired by the [xorshift](https://en.wikipedia.org/wiki/Xorshift) pseudorandom number generator and the [Trivium](https://en.wikipedia.org/wiki/Trivium_%28cipher%29) stream cipher. The design and testing process was based on [M.E. O'Neill's blog](https://www.pcg-random.org/blog/) and [Bob Jenkins's avalanche testing method](http://burtleburtle.net/bob/rand/talksmall.html). Thanks to Bert Pieters for providing additional processing power for avalanche testing and final randomness testing.
