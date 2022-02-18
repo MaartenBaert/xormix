@@ -197,8 +197,10 @@ def generate_tb(n, filename):
 		f.write(f'endmodule\n')
 		f.write(f'\n')
 
-for n in modules:
-	generate_rtl(n, f'../../verilog/rtl/xormix{n}.v')
+if __name__ == "__main__":
 
-for n in modules:
-	generate_tb(n, f'../../verilog/tb/xormix{n}_tb.v')
+	for n in modules:
+		generate_rtl(n, f'../../verilog/rtl/xormix{n}.v')
+
+	for n in modules:
+		generate_tb(n, f'../../verilog/tb/xormix{n}_tb.v')

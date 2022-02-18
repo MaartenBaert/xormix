@@ -105,7 +105,9 @@ def generate_rtl(n, filename):
 		f.write(f'end rtl;\n')
 		f.write(f'\n')
 
-def generate_tb(n, filename):
+def generate_tb(n, filename, modulename=None):
+	if modulename is None:
+		modulename = f'xormix{n}'
 	test_streams = 4
 	test_outputs = 100
 	seed = [random.getrandbits(n) for i in range(test_streams + 1)]
@@ -158,7 +160,7 @@ def generate_tb(n, filename):
 		f.write(f'begin\n')
 		f.write(f'    \n')
 		f.write(f'    -- DUT\n')
-		f.write(f'    inst_xormix : entity work.xormix{n} generic map(\n')
+		f.write(f'    inst_xormix : entity work.{modulename} generic map(\n')
 		f.write(f'        streams => streams\n')
 		f.write(f'    ) port map (\n')
 		f.write(f'        clk    => clk,\n')
@@ -206,8 +208,10 @@ def generate_tb(n, filename):
 		f.write(f'end bhv;\n')
 		f.write(f'\n')
 
-for n in modules:
-	generate_rtl(n, f'../../vhdl/rtl/xormix{n}.vhd')
+if __name__ == "__main__":
 
-for n in modules:
-	generate_tb(n, f'../../vhdl/tb/xormix{n}_tb.vhd')
+	for n in modules:
+		generate_rtl(n, f'../../vhdl/rtl/xormix{n}.vhd')
+
+	for n in modules:
+		generate_tb(n, f'../../vhdl/tb/xormix{n}_tb.vhd')
