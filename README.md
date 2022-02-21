@@ -47,7 +47,7 @@ Documentation
 Implementations
 ---------------
 
-Hardware implementations and simple testbenches written in VHDL and Verilog are available in the `vhdl` and `verilog` directories.
+Portable hardware implementations and simple testbenches written in VHDL and Verilog are available in the `vhdl` and `verilog` directories. Additionally, a non-portable implementation optimized for Xilinx 7 Series FPGAs is available in the `vhdl_x7s` directory.
 
 Two software implementations are also available for testing and verification purposes. The reference implementation is written in Python and can be found in the `python/reference` directory. This implementation is easy to understand and was used to generate the test vectors for all other implementations, but it is very slow. A much faster C++ implementation can be found in the `cpp` folder, along with a command-line tool (`xormix-tool`) which can be used to generate seeds and random output in various formats.
 
