@@ -67,4 +67,4 @@ All of these are permissive licenses which permit commercial use.
 Acknowledgments
 ---------------
 
-Xormix uses ideas inspired by the [xorshift](https://en.wikipedia.org/wiki/Xorshift) pseudorandom number generator and the [Trivium](https://en.wikipedia.org/wiki/Trivium_%28cipher%29) stream cipher. The design and testing process was based on [M.E. O'Neill's blog](https://www.pcg-random.org/blog/) and [Bob Jenkins's avalanche testing method](http://burtleburtle.net/bob/rand/talksmall.html). Thanks to Bert Pieters for providing additional processing power for avalanche testing and final randomness testing.
+Xormix uses ideas borrowed from the [xorshift](https://en.wikipedia.org/wiki/Xorshift) pseudorandom number generator and the [Trivium](https://en.wikipedia.org/wiki/Trivium_%28cipher%29) stream cipher. The design and testing process was based on [M.E. O'Neill's blog](https://www.pcg-random.org/blog/) and [Bob Jenkins's avalanche testing method](http://burtleburtle.net/bob/rand/talksmall.html). Thanks to Bert Pieters for providing additional processing power for avalanche testing and final randomness testing.
