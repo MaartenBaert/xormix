@@ -31,7 +31,7 @@ uint32_t g_option_streams;
 uint32_t g_option_uniform_seeds;
 uint64_t g_option_output_cycles;
 
-bool g_option_short_seed;
+bool g_option_simple_seed;
 uint64_t g_option_discard_cycles;
 uint64_t g_option_repeats;
 
@@ -229,7 +229,7 @@ struct xormix_tool {
 					word_t *substate = state.data() + uniform * (g_option_streams + 1);
 					read_formatted(bytes.data(), 1);
 					xm::unpack_words(bytes.data(), substate, 1);
-					if(g_option_short_seed) {
+					if(g_option_simple_seed) {
 						read_formatted(bytes.data() + xm::WORD_BYTES, 1);
 						xm::unpack_words(bytes.data() + xm::WORD_BYTES, substate + 1, 1);
 						for(size_t s = 1; s < g_option_streams; ++s) {
@@ -249,7 +249,7 @@ struct xormix_tool {
 				
 				// get original seed
 				generate_seed_x(state.data());
-				if(g_option_short_seed) {
+				if(g_option_simple_seed) {
 					generate_seed_y(state.data() + 1, 1);
 					for(size_t s = 1; s < g_option_streams; ++s) {
 						state[s + 1] = state[1];
@@ -274,7 +274,7 @@ struct xormix_tool {
 						}
 					} else {
 						substate[0] = seed_x;
-						if(g_option_short_seed) {
+						if(g_option_simple_seed) {
 							for(size_t s = 0; s < g_option_streams; ++s) {
 								substate[s + 1] = substate[0];
 							}
@@ -295,7 +295,7 @@ struct xormix_tool {
 					write_formatted(bytes.data(), 1);
 					if(g_option_output_format != FORMAT_BIN)
 						std::cout << "seed_y:" << std::endl;
-					write_formatted(bytes.data() + xm::WORD_BYTES, (g_option_short_seed)? 1 : g_option_streams);
+					write_formatted(bytes.data() + xm::WORD_BYTES, (g_option_simple_seed)? 1 : g_option_streams);
 					if(g_option_output_format != FORMAT_BIN)
 						std::cout << std::endl;
 				}
@@ -355,8 +355,8 @@ int main(int argc, char **argv) {
 				cxxopts::value(g_option_uniform_seeds)->default_value("1"))
 			("c,output-cycles" , "Number of output cycles [0 means infinite]",
 				cxxopts::value(g_option_output_cycles)->default_value("0"))
-			("t,short-seed"    , "Use simplified seeding procedure with short seeds",
-				cxxopts::value(g_option_short_seed))
+			("t,simple-seed"   , "Use simplified seeding procedure with short seeds",
+				cxxopts::value(g_option_simple_seed))
 			("d,discard-cycles", "Number of cycles to discard after seeding, typically used with short seeds",
 				cxxopts::value(g_option_discard_cycles)->default_value("0"))
 			("p,repeats"       , "Number of times to repeat the whole command, useful for repeated reseeding [0 means infinite]",
