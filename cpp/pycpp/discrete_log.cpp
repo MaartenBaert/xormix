@@ -43,7 +43,7 @@ struct discrete_log_wrapper {
 		return res;
 	}
 	
-	static matrix_t int_to_matrix(word_t val, word_t poly) {
+	static matrix_t gf_to_matrix(word_t val, word_t poly) {
 		matrix_t res;
 		for(size_t ii = 0; ii < L; ++ii) {
 			for(size_t i = 0; i < N; ++i) {
@@ -63,7 +63,7 @@ struct discrete_log_wrapper {
 		return res;
 	}
 	
-	static matrix_t int_to_matrix(const pybind11::int_ &val, const pybind11::int_ &poly) {
+	static matrix_t gf_to_matrix(const pybind11::int_ &val, const pybind11::int_ &poly) {
 		matrix_t res;
 		pybind11::int_ temp = val;
 		for(size_t ii = 0; ii < L; ++ii) {
@@ -167,8 +167,8 @@ struct discrete_log_wrapper {
 		word_t polyw = int_to_word(poly);
 		word_t aw = int_to_word(1);
 		word_t bw = int_to_word(val);
-		matrix_t am = int_to_matrix(genw, polyw);
-		matrix_t bm = int_to_matrix(gf_pow(genw, gsw, polyw), polyw);
+		matrix_t am = gf_to_matrix(genw, polyw);
+		matrix_t bm = gf_to_matrix(gf_pow(genw, gsw, polyw), polyw);
 		std::vector<bsgs_entry_t> atable(steps), btable(steps);
 		for(uint64_t i = 0; i < steps; ++i) {
 			atable[i] = {uint64_t(aw.l[0]), i};

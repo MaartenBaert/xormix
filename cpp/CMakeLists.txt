@@ -49,17 +49,23 @@ if(BUILD_PYTHON)
 		3rdparty/pcg.hpp
 		common/xormix.cpp
 		common/xormix.hpp
-		design/avalanche.cpp
+		pycpp/avalanche.cpp
 	)
 	target_include_directories(xormix_avalanche PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 	
 	pybind11_add_module(xormix_discrete_log
-		3rdparty/pcg.hpp
 		common/xormix.cpp
 		common/xormix.hpp
-		design/discrete_log.cpp
+		pycpp/discrete_log.cpp
 	)
 	target_include_directories(xormix_discrete_log PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+	
+	pybind11_add_module(xormix_pycpp
+		common/xormix.cpp
+		common/xormix.hpp
+		pycpp/python_module.cpp
+	)
+	target_include_directories(xormix_pycpp PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 	
 endif()
 
