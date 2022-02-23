@@ -175,4 +175,3 @@ module xormix128_tb;
     end
     
 endmodule
-

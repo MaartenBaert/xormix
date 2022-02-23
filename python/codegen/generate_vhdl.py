@@ -103,7 +103,6 @@ def generate_rtl(n, filename):
 		f.write(f'    end process;\n')
 		f.write(f'    \n')
 		f.write(f'end rtl;\n')
-		f.write(f'\n')
 
 def generate_tb(n, filename, modulename=None):
 	if modulename is None:
@@ -206,7 +205,6 @@ def generate_tb(n, filename, modulename=None):
 		f.write(f'    end process;\n')
 		f.write(f'    \n')
 		f.write(f'end bhv;\n')
-		f.write(f'\n')
 
 if __name__ == "__main__":
 

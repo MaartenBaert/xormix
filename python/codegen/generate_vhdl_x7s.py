@@ -178,7 +178,6 @@ def generate_rtl_x7s(n, filename):
 		f.write(f'    end process;\n')
 		f.write(f'    \n')
 		f.write(f'end rtl;\n')
-		f.write(f'\n')
 
 if __name__ == "__main__":
 

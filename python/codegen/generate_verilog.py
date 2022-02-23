@@ -100,7 +100,6 @@ def generate_rtl(n, filename):
 		f.write(f'    end\n')
 		f.write(f'    \n')
 		f.write(f'endmodule\n')
-		f.write(f'\n')
 
 def generate_tb(n, filename):
 	test_streams = 4
@@ -195,7 +194,6 @@ def generate_tb(n, filename):
 		f.write(f'    end\n')
 		f.write(f'    \n')
 		f.write(f'endmodule\n')
-		f.write(f'\n')
 
 if __name__ == "__main__":
 

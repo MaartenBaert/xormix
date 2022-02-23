@@ -175,4 +175,3 @@ module xormix32_tb;
     end
     
 endmodule
-

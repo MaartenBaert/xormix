@@ -175,4 +175,3 @@ module xormix16_tb;
     end
     
 endmodule
-
