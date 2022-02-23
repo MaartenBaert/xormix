@@ -26,7 +26,7 @@ struct xormix {
 	static constexpr size_t L_ = L;
 	static constexpr size_t WORD_BYTES = N * L / 8;
 	static constexpr size_t LIMB_BITS = std::numeric_limits<limb_t>::digits;
-	static constexpr limb_t MASK = (N == LIMB_BITS)? -limb_t(1) : (limb_t(1) << N) - limb_t(1);
+	static constexpr limb_t MASK = (limb_t(2) << (N - 1)) - 1;
 	
 	static const size_t REVISION;
 	static const std::initializer_list<word_t> TEST_PERIODS;
@@ -231,7 +231,7 @@ struct xormix {
 			size_t jj = ii + j;
 			result |= U(words[jj / L].l[jj % L]) << (j * N - i - 1) << 1;
 		}
-		return result << (T_BITS - length) >> (T_BITS - length);
+		return result & ((T(2) << (length - 1)) - 1);
 	}
 	
 };
