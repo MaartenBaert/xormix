@@ -275,8 +275,9 @@ struct xormix_tool {
 					} else {
 						substate[0] = seed_x;
 						if(g_option_simple_seed) {
-							for(size_t s = 0; s < g_option_streams; ++s) {
-								substate[s + 1] = substate[0];
+							generate_seed_y(substate + 1, 1);
+							for(size_t s = 1; s < g_option_streams; ++s) {
+								substate[s + 1] = substate[1];
 							}
 						} else {
 							generate_seed_y(substate + 1, g_option_streams);
