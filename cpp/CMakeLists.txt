@@ -34,8 +34,10 @@ if(BUILD_TESTS)
 		common/xormix.hpp
 		test/test_divide_period.cpp
 		test/test_full_period.cpp
+		test/test_matrix_inverse.cpp
 		test/test_matrix_power.cpp
 		test/test_output.cpp
+		test/test_reverse.cpp
 		test/tests.cpp
 	)
 	target_include_directories(xormix-tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

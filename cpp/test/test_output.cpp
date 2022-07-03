@@ -955,16 +955,17 @@ static const xormix128::word_t xormix128_output[TEST_OUTPUTS][TEST_STREAMS + 1] 
 
 #define XORMIX_OUTPUT(n) \
 TEST_CASE("xormix"#n" output", "[xormix"#n"][output]") { \
-	xormix##n::word_t state[TEST_STREAMS + 1]; \
+	typedef xormix##n xm; \
+	xm::word_t state[TEST_STREAMS + 1]; \
 	for(size_t j = 0; j < TEST_STREAMS + 1; ++j) { \
 		state[j] = xormix##n##_seeds[j]; \
 	} \
 	for(size_t i = 0; i < TEST_OUTPUTS; ++i) { \
 		INFO("output " << i) \
-		xormix##n::next(state, TEST_STREAMS); \
+		xm::next(state, TEST_STREAMS); \
 		for(size_t j = 0; j < TEST_STREAMS + 1; ++j) { \
 			INFO("word " << j) \
-			for(size_t k = 0; k < xormix##n::L_; ++k) { \
+			for(size_t k = 0; k < xm::L_; ++k) { \
 				INFO("limb " << k) \
 				REQUIRE(state[j].l[k] == xormix##n##_output[i][j].l[k]); \
 			} \
