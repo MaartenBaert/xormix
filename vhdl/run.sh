@@ -13,6 +13,6 @@ for N in 16 24 32 48 64 96 128; do
 	ghdl -e xormix${N}_tb
 
 	echo "Running xormix${N}_tb ..."
-	./xormix${N}_tb
+	ghdl -r xormix${N}_tb
 
 done
