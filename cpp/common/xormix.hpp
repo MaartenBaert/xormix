@@ -220,7 +220,7 @@ struct xormix {
 	}
 	
 	template<typename T>
-	static T slice_words(const word_t *words, size_t num_words, size_t offset, size_t length) {
+	static T slice_words(const word_t *words, size_t offset, size_t length) {
 		constexpr size_t T_BITS = std::numeric_limits<T>::digits + std::numeric_limits<T>::is_signed;
 		typedef typename std::conditional<(T_BITS > LIMB_BITS), T, limb_t>::type U;
 		if(length == 0)
