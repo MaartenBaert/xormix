@@ -44,12 +44,7 @@ def write_array_dec(f, name, n, words, cols):
 		f.write('\t' + ', '.join(values[i : i + cols]) + ',\n')
 	f.write('};\n')
 
-def generate_xormix(n, filename):
-	l = math.ceil(math.log10(n))
-	matrix = modules[n].matrix
-	salts = modules[n].salts
-	shuffle = modules[n].shuffle
-	shifts = modules[n].shifts
+def generate_xormix(filename):
 	with open(filename, 'w') as f:
 		f.write(f'// Copyright (c) 2020-2021 Maarten Baert <info@maartenbaert.be>\n')
 		f.write(f'// Available under the MIT License - see LICENSE.txt for details.\n')
@@ -78,9 +73,17 @@ def generate_xormix(n, filename):
 			f.write(f'template<>\n')
 			write_array(f, f'const xormix{n}::matrix_t xormix{n}::XORMIX_MATRIX', n, xormatrix, 4)
 		for n in modules:
+			shuffled_salts = []
+			for s in range(n):
+				salt = modules[n].salts[s]
+				shuffled = 0
+				for i in range(n):
+					j = (s + modules[n].shuffle[i]) % n
+					shuffled |= ((salt >> j) & 1) << i
+				shuffled_salts.append(shuffled)
 			f.write(f'\n')
 			f.write(f'template<>\n')
-			write_array(f, f'const xormix{n}::word_t xormix{n}::XORMIX_SALTS[{n}]', n, modules[n].salts, 4)
+			write_array(f, f'const xormix{n}::word_t xormix{n}::XORMIX_SALTS[{n}]', n, shuffled_salts, 4)
 		for n in modules:
 			f.write(f'\n')
 			f.write(f'template<>\n')
@@ -91,4 +94,5 @@ def generate_xormix(n, filename):
 			f.write(f'template<>\n')
 			f.write(f'const size_t xormix{n}::XORMIX_SHIFTS[4] = ' + shifts + f';\n')
 
-generate_xormix(n, f'../../cpp/common/xormix.cpp')
+if __name__ == '__main__':
+	generate_xormix(f'../../cpp/common/xormix.cpp')

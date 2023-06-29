@@ -206,7 +206,7 @@ def generate_tb(n, filename, modulename=None):
 		f.write(f'    \n')
 		f.write(f'end bhv;\n')
 
-if __name__ == "__main__":
+if __name__ == '__main__':
 
 	for n in modules:
 		generate_rtl(n, f'../../vhdl/rtl/xormix{n}.vhd')

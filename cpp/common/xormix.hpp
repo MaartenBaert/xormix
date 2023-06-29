@@ -9,6 +9,20 @@
 #include <limits>
 #include <type_traits>
 
+// define loop unrolling depending on the compiler
+// based on https://stackoverflow.com/questions/63404539/portable-loop-unrolling-with-template-parameter-in-c-with-gcc-icc
+#define TO_STRING_HELPER(X) #X
+#define TO_STRING(X) TO_STRING_HELPER(X)
+#if defined(__ICC) || defined(__ICL)
+#define PRAGMA_UNROLL(n) _Pragma(TO_STRING(unroll (n)))
+#elif defined(__clang__)
+#define PRAGMA_UNROLL(n) _Pragma(TO_STRING(unroll (n)))
+#elif defined(__GNUC__) && !defined(__clang__)
+#define PRAGMA_UNROLL(n) _Pragma(TO_STRING(GCC unroll (n)))
+#else
+#define PRAGMA_UNROLL(n)
+#endif
+
 // T = limb type
 // N = bits per limb
 // L = number of limbs
@@ -84,9 +98,12 @@ struct xormix {
 	
 	static word_t matrix_vector_product(const matrix_t &mat, word_t vec) {
 		word_t res = {};
+		PRAGMA_UNROLL(64)
 		for(size_t j = 0; j < N; ++j) {
+			PRAGMA_UNROLL(64)
 			for(size_t jj = 0; jj < L; ++jj) {
 				limb_t bit = -((vec.l[jj] >> j) & 1);
+				PRAGMA_UNROLL(64)
 				for(size_t ii = 0; ii < L; ++ii) {
 					res.l[ii] ^= mat.w[j][jj].l[ii] & bit;
 				}
@@ -119,20 +136,30 @@ struct xormix {
 		return res;
 	}
 	
-	static word_t shuffle_word(word_t a, size_t shift, const size_t shuffle[N * L]) {
-		word_t res = {};
+	static word_t xor_word(word_t a, word_t b) {
+		word_t res;
+		PRAGMA_UNROLL(64)
 		for(size_t ii = 0; ii < L; ++ii) {
-			for(size_t i = 0; i < N; ++i) {
-				size_t k = shift + shuffle[ii * N + i];
-				size_t jj = (k / N) % L, j = k % N;
-				limb_t bit = (a.l[jj] >> j) & 1;
-				res.l[ii] |= bit << i;
+			res.l[ii] = a.l[ii] ^ b.l[ii];
+		}
+		return res;
+	}
+	
+	static word_t right_rotate_word(word_t a, size_t k) {
+		word_t res;
+		if(L == 1) {
+			res.l[0] = (a.l[0] >> k) | (a.l[0] << (N - k - 1) << 1);
+		} else {
+			size_t ii = k / N, i = k % N;
+			PRAGMA_UNROLL(64)
+			for(size_t jj = 0; jj < L; ++jj) {
+				res.l[jj] = (a.l[(ii + jj) % L] >> i) | (a.l[(ii + jj + 1) % L] << (N - i - 1) << 1);
 			}
 		}
 		return res;
 	}
 	
-	static limb_t right_shift(word_t a, size_t k) {
+	static limb_t right_shift_limb(word_t a, size_t k) {
 		if(L == 1) {
 			return a.l[0] >> k;
 		} else {
@@ -141,26 +168,105 @@ struct xormix {
 		}
 	}
 	
+	static word_t shuffle_word(word_t a, const size_t shuffle[N * L]) {
+		word_t res = {};
+		PRAGMA_UNROLL(64)
+		for(size_t ii = 0; ii < L; ++ii) {
+			PRAGMA_UNROLL(64)
+			for(size_t i = 0; i < N; ++i) {
+				size_t k = shuffle[ii * N + i];
+				size_t jj = (k / N) % L, j = k % N;
+				limb_t bit = (a.l[jj] >> j) & 1;
+				res.l[ii] |= bit << i;
+			}
+		}
+		return res;
+	}
+	
+	static void shuffle_word4(word_t res[4], word_t a, const size_t shuffle[N * L]) {
+		PRAGMA_UNROLL(64)
+		for(size_t ii = 0; ii < L; ++ii) {
+			limb_t tmp[4] = {};
+			PRAGMA_UNROLL(64)
+			for(size_t i = 0; i < N; ++i) {
+				size_t k = shuffle[ii * N + i];
+				size_t jj = (k / N) % L, j = k % N;
+				limb_t bits = ((a.l[jj] >> j) | (a.l[(jj + 1) % L] << (N - 1 - j) << 1)) & 0xf;
+				tmp[i % 4] |= bits << (i / 4 * 4);
+			}
+			limb_t swp[4];
+			swp[0] = (tmp[0] & limb_t(UINT64_C(0x3333333333333333))) | ((tmp[2] & limb_t(UINT64_C(0x3333333333333333))) << 2);
+			swp[1] = (tmp[1] & limb_t(UINT64_C(0x3333333333333333))) | ((tmp[3] & limb_t(UINT64_C(0x3333333333333333))) << 2);
+			swp[2] = (tmp[2] & limb_t(UINT64_C(0xcccccccccccccccc))) | ((tmp[0] & limb_t(UINT64_C(0xcccccccccccccccc))) >> 2);
+			swp[3] = (tmp[3] & limb_t(UINT64_C(0xcccccccccccccccc))) | ((tmp[1] & limb_t(UINT64_C(0xcccccccccccccccc))) >> 2);
+			res[0].l[ii] = (swp[0] & limb_t(UINT64_C(0x5555555555555555))) | ((swp[1] & limb_t(UINT64_C(0x5555555555555555))) << 1);
+			res[1].l[ii] = (swp[1] & limb_t(UINT64_C(0xaaaaaaaaaaaaaaaa))) | ((swp[0] & limb_t(UINT64_C(0xaaaaaaaaaaaaaaaa))) >> 1);
+			res[2].l[ii] = (swp[2] & limb_t(UINT64_C(0x5555555555555555))) | ((swp[3] & limb_t(UINT64_C(0x5555555555555555))) << 1);
+			res[3].l[ii] = (swp[3] & limb_t(UINT64_C(0xaaaaaaaaaaaaaaaa))) | ((swp[2] & limb_t(UINT64_C(0xaaaaaaaaaaaaaaaa))) >> 1);
+		}
+	}
+	
+	static void shuffle_word8(word_t res[8], word_t a, const size_t shuffle[N * L]) {
+		PRAGMA_UNROLL(64)
+		for(size_t ii = 0; ii < L; ++ii) {
+			limb_t tmp[8] = {};
+			PRAGMA_UNROLL(64)
+			for(size_t i = 0; i < N; ++i) {
+				size_t k = shuffle[ii * N + i];
+				size_t jj = (k / N) % L, j = k % N;
+				limb_t bits = ((a.l[jj] >> j) | (a.l[(jj + 1) % L] << (N - 1 - j) << 1)) & 0xff;
+				tmp[i % 8] |= bits << (i / 8 * 8);
+			}
+			limb_t swp[8];
+			swp[0] = (tmp[0] & limb_t(UINT64_C(0x0f0f0f0f0f0f0f0f))) | ((tmp[4] & limb_t(UINT64_C(0x0f0f0f0f0f0f0f0f))) << 4);
+			swp[1] = (tmp[1] & limb_t(UINT64_C(0x0f0f0f0f0f0f0f0f))) | ((tmp[5] & limb_t(UINT64_C(0x0f0f0f0f0f0f0f0f))) << 4);
+			swp[2] = (tmp[2] & limb_t(UINT64_C(0x0f0f0f0f0f0f0f0f))) | ((tmp[6] & limb_t(UINT64_C(0x0f0f0f0f0f0f0f0f))) << 4);
+			swp[3] = (tmp[3] & limb_t(UINT64_C(0x0f0f0f0f0f0f0f0f))) | ((tmp[7] & limb_t(UINT64_C(0x0f0f0f0f0f0f0f0f))) << 4);
+			swp[4] = (tmp[4] & limb_t(UINT64_C(0xf0f0f0f0f0f0f0f0))) | ((tmp[0] & limb_t(UINT64_C(0xf0f0f0f0f0f0f0f0))) >> 4);
+			swp[5] = (tmp[5] & limb_t(UINT64_C(0xf0f0f0f0f0f0f0f0))) | ((tmp[1] & limb_t(UINT64_C(0xf0f0f0f0f0f0f0f0))) >> 4);
+			swp[6] = (tmp[6] & limb_t(UINT64_C(0xf0f0f0f0f0f0f0f0))) | ((tmp[2] & limb_t(UINT64_C(0xf0f0f0f0f0f0f0f0))) >> 4);
+			swp[7] = (tmp[7] & limb_t(UINT64_C(0xf0f0f0f0f0f0f0f0))) | ((tmp[3] & limb_t(UINT64_C(0xf0f0f0f0f0f0f0f0))) >> 4);
+			tmp[0] = (swp[0] & limb_t(UINT64_C(0x3333333333333333))) | ((swp[2] & limb_t(UINT64_C(0x3333333333333333))) << 2);
+			tmp[1] = (swp[1] & limb_t(UINT64_C(0x3333333333333333))) | ((swp[3] & limb_t(UINT64_C(0x3333333333333333))) << 2);
+			tmp[2] = (swp[2] & limb_t(UINT64_C(0xcccccccccccccccc))) | ((swp[0] & limb_t(UINT64_C(0xcccccccccccccccc))) >> 2);
+			tmp[3] = (swp[3] & limb_t(UINT64_C(0xcccccccccccccccc))) | ((swp[1] & limb_t(UINT64_C(0xcccccccccccccccc))) >> 2);
+			tmp[4] = (swp[4] & limb_t(UINT64_C(0x3333333333333333))) | ((swp[6] & limb_t(UINT64_C(0x3333333333333333))) << 2);
+			tmp[5] = (swp[5] & limb_t(UINT64_C(0x3333333333333333))) | ((swp[7] & limb_t(UINT64_C(0x3333333333333333))) << 2);
+			tmp[6] = (swp[6] & limb_t(UINT64_C(0xcccccccccccccccc))) | ((swp[4] & limb_t(UINT64_C(0xcccccccccccccccc))) >> 2);
+			tmp[7] = (swp[7] & limb_t(UINT64_C(0xcccccccccccccccc))) | ((swp[5] & limb_t(UINT64_C(0xcccccccccccccccc))) >> 2);
+			res[0].l[ii] = (tmp[0] & limb_t(UINT64_C(0x5555555555555555))) | ((tmp[1] & limb_t(UINT64_C(0x5555555555555555))) << 1);
+			res[1].l[ii] = (tmp[1] & limb_t(UINT64_C(0xaaaaaaaaaaaaaaaa))) | ((tmp[0] & limb_t(UINT64_C(0xaaaaaaaaaaaaaaaa))) >> 1);
+			res[2].l[ii] = (tmp[2] & limb_t(UINT64_C(0x5555555555555555))) | ((tmp[3] & limb_t(UINT64_C(0x5555555555555555))) << 1);
+			res[3].l[ii] = (tmp[3] & limb_t(UINT64_C(0xaaaaaaaaaaaaaaaa))) | ((tmp[2] & limb_t(UINT64_C(0xaaaaaaaaaaaaaaaa))) >> 1);
+			res[4].l[ii] = (tmp[4] & limb_t(UINT64_C(0x5555555555555555))) | ((tmp[5] & limb_t(UINT64_C(0x5555555555555555))) << 1);
+			res[5].l[ii] = (tmp[5] & limb_t(UINT64_C(0xaaaaaaaaaaaaaaaa))) | ((tmp[4] & limb_t(UINT64_C(0xaaaaaaaaaaaaaaaa))) >> 1);
+			res[6].l[ii] = (tmp[6] & limb_t(UINT64_C(0x5555555555555555))) | ((tmp[7] & limb_t(UINT64_C(0x5555555555555555))) << 1);
+			res[7].l[ii] = (tmp[7] & limb_t(UINT64_C(0xaaaaaaaaaaaaaaaa))) | ((tmp[6] & limb_t(UINT64_C(0xaaaaaaaaaaaaaaaa))) >> 1);
+		}
+	}
+	
 	static void mix_halfword(word_t &state, word_t &mixin, word_t mixup, const size_t *shifts) {
 		if(L == 1) {
 			limb_t s0 = mixup.l[0];
-			limb_t s1 = right_shift(mixup, shifts[0]);
-			limb_t s2 = right_shift(mixup, shifts[1]);
-			limb_t s3 = right_shift(mixup, shifts[2]);
-			limb_t s4 = right_shift(mixup, shifts[3]);
+			limb_t s1 = right_shift_limb(mixup, shifts[0]);
+			limb_t s2 = right_shift_limb(mixup, shifts[1]);
+			limb_t s3 = right_shift_limb(mixup, shifts[2]);
+			limb_t s4 = right_shift_limb(mixup, shifts[3]);
 			limb_t s5 = mixin.l[0];
 			limb_t temp = s0 ^ (s1 & ~s2) ^ s3 ^ s4 ^ s5;
 			state.l[0] = ((temp << (N / 2)) | (state.l[0] >> (N / 2))) & MASK;
 			mixin.l[0] >>= N / 2;
 			mixup.l[0] >>= N / 2;
 		} else {
+			PRAGMA_UNROLL(64)
 			for(size_t ii = 0; ii < L / 2; ++ii) {
 				limb_t s0 = mixup.l[0];
-				limb_t s1 = right_shift(mixup, shifts[0]);
-				limb_t s2 = right_shift(mixup, shifts[1]);
-				limb_t s3 = right_shift(mixup, shifts[2]);
-				limb_t s4 = right_shift(mixup, shifts[3]);
+				limb_t s1 = right_shift_limb(mixup, shifts[0]);
+				limb_t s2 = right_shift_limb(mixup, shifts[1]);
+				limb_t s3 = right_shift_limb(mixup, shifts[2]);
+				limb_t s4 = right_shift_limb(mixup, shifts[3]);
 				limb_t s5 = mixin.l[0];
+				PRAGMA_UNROLL(64)
 				for(size_t jj = 0; jj < L - 1; ++jj) {
 					state.l[jj] = state.l[jj + 1];
 					mixin.l[jj] = mixin.l[jj + 1];
@@ -175,16 +281,36 @@ struct xormix {
 		word_t state0 = state[0];
 		state[0] = matrix_vector_product(XORMIX_MATRIX, state0);
 		word_t mixin[N * L];
-		for(size_t s = 0; s < streams; ++s) {
-			word_t salted;
-			for(size_t ii = 0; ii < L; ++ii) {
-				salted.l[ii] = state0.l[ii] ^ XORMIX_SALTS[s].l[ii];
-			}
-			mixin[s] = shuffle_word(salted, s, XORMIX_SHUFFLE);
+		size_t s = 0;
+		for( ; s < (streams + 2) / 8 * 8; s += 8) {
+			word_t tmp[8];
+			shuffle_word8(tmp, state0, XORMIX_SHUFFLE);
+			mixin[s + 0] = xor_word(tmp[0], XORMIX_SALTS[s + 0]);
+			mixin[s + 1] = xor_word(tmp[1], XORMIX_SALTS[s + 1]);
+			mixin[s + 2] = xor_word(tmp[2], XORMIX_SALTS[s + 2]);
+			mixin[s + 3] = xor_word(tmp[3], XORMIX_SALTS[s + 3]);
+			mixin[s + 4] = xor_word(tmp[4], XORMIX_SALTS[s + 4]);
+			mixin[s + 5] = xor_word(tmp[5], XORMIX_SALTS[s + 5]);
+			mixin[s + 6] = xor_word(tmp[6], XORMIX_SALTS[s + 6]);
+			mixin[s + 7] = xor_word(tmp[7], XORMIX_SALTS[s + 7]);
+			state0 = right_rotate_word(state0, 8);
+		}
+		for( ; s < (streams + 1) / 4 * 4; s += 4) {
+			word_t tmp[4];
+			shuffle_word4(tmp, state0, XORMIX_SHUFFLE);
+			mixin[s + 0] = xor_word(tmp[0], XORMIX_SALTS[s + 0]);
+			mixin[s + 1] = xor_word(tmp[1], XORMIX_SALTS[s + 1]);
+			mixin[s + 2] = xor_word(tmp[2], XORMIX_SALTS[s + 2]);
+			mixin[s + 3] = xor_word(tmp[3], XORMIX_SALTS[s + 3]);
+			state0 = right_rotate_word(state0, 4);
+		}
+		for( ; s < streams; ++s) {
+			mixin[s] = xor_word(shuffle_word(state0, XORMIX_SHUFFLE), XORMIX_SALTS[s]);
+			state0 = right_rotate_word(state0, 1);
 		}
 		for(size_t h = 0; h < 2; ++h) {
 			word_t state1 = state[1];
-			for(size_t s = 0; s < streams; ++s) {
+			for(s = 0; s < streams; ++s) {
 				word_t mixup = (s == streams - 1)? state1 : state[s + 2];
 				mix_halfword(state[s + 1], mixin[s], mixup, XORMIX_SHIFTS);
 			}

@@ -179,7 +179,7 @@ def generate_rtl_x7s(n, filename):
 		f.write(f'    \n')
 		f.write(f'end rtl;\n')
 
-if __name__ == "__main__":
+if __name__ == '__main__':
 
 	for n in modules:
 		generate_rtl_x7s(n, f'../../vhdl_x7s/rtl/xormix{n}_x7s.vhd')
