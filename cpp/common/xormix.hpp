@@ -341,7 +341,30 @@ struct xormix {
 		state[0] = matrix_vector_product(XORMIX_MATRIX_INV, state[0]);
 		word_t state0 = state[0];
 		word_t mixin[N * L];
-		for(size_t s = 0; s < streams; ++s) {
+		size_t s = 0;
+		for( ; s < (streams + 2) / 8 * 8; s += 8) {
+			word_t tmp[8];
+			shuffle_word8(tmp, state0, XORMIX_SHUFFLE);
+			mixin[s + 0] = xor_word(tmp[0], XORMIX_SALTS[s + 0]);
+			mixin[s + 1] = xor_word(tmp[1], XORMIX_SALTS[s + 1]);
+			mixin[s + 2] = xor_word(tmp[2], XORMIX_SALTS[s + 2]);
+			mixin[s + 3] = xor_word(tmp[3], XORMIX_SALTS[s + 3]);
+			mixin[s + 4] = xor_word(tmp[4], XORMIX_SALTS[s + 4]);
+			mixin[s + 5] = xor_word(tmp[5], XORMIX_SALTS[s + 5]);
+			mixin[s + 6] = xor_word(tmp[6], XORMIX_SALTS[s + 6]);
+			mixin[s + 7] = xor_word(tmp[7], XORMIX_SALTS[s + 7]);
+			state0 = right_rotate_word(state0, 8);
+		}
+		for( ; s < (streams + 1) / 4 * 4; s += 4) {
+			word_t tmp[4];
+			shuffle_word4(tmp, state0, XORMIX_SHUFFLE);
+			mixin[s + 0] = xor_word(tmp[0], XORMIX_SALTS[s + 0]);
+			mixin[s + 1] = xor_word(tmp[1], XORMIX_SALTS[s + 1]);
+			mixin[s + 2] = xor_word(tmp[2], XORMIX_SALTS[s + 2]);
+			mixin[s + 3] = xor_word(tmp[3], XORMIX_SALTS[s + 3]);
+			state0 = right_rotate_word(state0, 4);
+		}
+		for( ; s < streams; ++s) {
 			mixin[s] = xor_word(shuffle_word(state0, XORMIX_SHUFFLE), XORMIX_SALTS[s]);
 			state0 = right_rotate_word(state0, 1);
 		}
@@ -352,7 +375,7 @@ struct xormix {
 		for(size_t h = 0; h < nparts; ++h) {
 			size_t nbits = (h == nparts - 1)? N * L - (nparts - 1) * minshift : minshift;
 			word_t statelast = state[streams];
-			for(size_t s = streams; s-- > 0; ) {
+			for(s = streams; s-- > 0; ) {
 				word_t mixup = (s == 0)? statelast : state[s];
 				word_t &mixin2 = (s == 0)? mixin[streams - 1] : mixin[s - 1];
 				unmix_partword(state[s + 1], mixin2, mixup, XORMIX_SHIFTS, nbits);

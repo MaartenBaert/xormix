@@ -4,7 +4,7 @@
 #include "3rdparty/catch.hpp"
 #include "common/xormix.hpp"
 
-static constexpr size_t TEST_STREAMS = 4;
+static constexpr size_t TEST_STREAMS = 13;
 static constexpr size_t TEST_OUTPUTS = 100;
 
 #define XORMIX_REVERSE(n) \
