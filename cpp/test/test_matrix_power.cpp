@@ -380,7 +380,8 @@ static const xormix128::matrix_t matrix_power_output128 = {
 
 #define XORMIX_MATRIX_POWER(n) \
 TEST_CASE("xormix"#n" matrix power", "[xormix"#n"][matrixpower]") { \
-	REQUIRE(xormix##n::matrix_equal(xormix##n::matrix_power(matrix_power_input##n, matrix_power##n), matrix_power_output##n)); \
+	typedef xormix##n xm; \
+	REQUIRE(xm::matrix_equal(xm::matrix_power(matrix_power_input##n, matrix_power##n), matrix_power_output##n)); \
 }
 
 XORMIX_MATRIX_POWER(16)

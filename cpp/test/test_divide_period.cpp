@@ -125,9 +125,10 @@ static const xormix128::word_t divide_period_output128[TEST_DIVISIONS] = {
 
 #define XORMIX_DIVIDE_PERIOD(n) \
 TEST_CASE("xormix"#n" divide period", "[xormix"#n"][divideperiod]") { \
+	typedef xormix##n xm; \
 	for(size_t i = 0; i < TEST_DIVISIONS; ++i) { \
 		INFO("division " << i) \
-		REQUIRE(xormix##n::word_equal(xormix##n::divide_period(divide_period_input##n[i]), divide_period_output##n[i])); \
+		REQUIRE(xm::word_equal(xm::divide_period(divide_period_input##n[i]), divide_period_output##n[i])); \
 	} \
 }
 

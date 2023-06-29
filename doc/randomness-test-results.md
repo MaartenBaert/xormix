@@ -15,6 +15,8 @@ PractRand uses an incremental testing strategy: rather than analyzing a fixed am
 
 Since these tests can potentially run forever if the PRNG doesn't produce any failures, I had to cut them off at some point. I limited the tests most configurations to 2^40 bytes (which takes about 6 hours per test), with a few exceptions (such as xormix32 with 1 stream, for which I analyzed 2^46 bytes, which took about two weeks).
 
+I used the following command-line options: `RNG_test -tf 2 -tlmin 10 -tlmax 40 -multithreaded`
+
 | Variant   | Streams | First failure at | Failed test     | P-value |
 | --------- | ------- | ---------------- | --------------- | ------- |
 | xormix16  | 1       | 2^29 bytes       | FPF-14+6/16:all | 8.9e-21 |
@@ -199,6 +201,8 @@ Dieharder (3.31.1) results
 --------------------------
 
 Dieharder is another randomness test suite which extends and improves upon the classic 'diehard' test suite. It is less powerful than PractRand and TestU01, but is included for completeness. Dieharder classifies test results as FAIL if the p-value is less than 1e-6, PASS if the p-value is greater than 0.005, and WEAK for values in between. Test results marked as WEAK are often false positives, so in order to find out whether a WEAK result is a real failure or not, I ran Dieharder in 'resolve ambiguity' mode. In this mode, the number of samples of weak tests is gradually increased until the WEAK result either becomes FAIL (if the failure is real) or PASS (if it was a false positive). If no FAIL results are produced, the random number generator has passed Dieharder.
+
+I used the following command-line options: `dieharder -a -g 200 -Y 1 -k 2`
 
 | Variant      | Streams | Num. PASS | Num. WEAK | Num. FAIL | Verdict |
 | ------------ | ------- | --------- | --------- | --------- | ------- |

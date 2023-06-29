@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 
+#include <algorithm>
 #include <initializer_list>
 #include <limits>
 #include <type_traits>
@@ -44,7 +45,7 @@ struct xormix {
 	
 	static const size_t REVISION;
 	static const std::initializer_list<word_t> TEST_PERIODS;
-	static const matrix_t XORMIX_MATRIX;
+	static const matrix_t XORMIX_MATRIX, XORMIX_MATRIX_INV;
 	static const word_t XORMIX_SALTS[N * L];
 	static const size_t XORMIX_SHUFFLE[N * L];
 	static const size_t XORMIX_SHIFTS[4];
@@ -160,6 +161,7 @@ struct xormix {
 	}
 	
 	static limb_t right_shift_limb(word_t a, size_t k) {
+		assert(k < N * L);
 		if(L == 1) {
 			return a.l[0] >> k;
 		} else {
@@ -277,6 +279,24 @@ struct xormix {
 		}
 	}
 	
+	static void unmix_partword(word_t &state, word_t &mixin, word_t mixup, const size_t *shifts, size_t nbits) {
+		limb_t s0 = mixup.l[L - 1] >> (N - nbits);
+		limb_t s1 = right_shift_limb(state, shifts[0] - nbits);
+		limb_t s2 = right_shift_limb(state, shifts[1] - nbits);
+		limb_t s3 = right_shift_limb(state, shifts[2] - nbits);
+		limb_t s4 = right_shift_limb(state, shifts[3] - nbits);
+		limb_t s5 = mixin.l[L - 1] >> (N - nbits);
+		limb_t temp = s0 ^ (s1 & ~s2) ^ s3 ^ s4 ^ s5;
+		for(size_t jj = L; jj-- > 1; ) {
+			state.l[jj] = ((state.l[jj] << nbits) | (state.l[jj - 1] >> (N - nbits))) & MASK;
+			mixin.l[jj] = ((mixin.l[jj] << nbits) | (mixin.l[jj - 1] >> (N - nbits))) & MASK;
+			mixup.l[jj] = ((mixup.l[jj] << nbits) | (mixup.l[jj - 1] >> (N - nbits))) & MASK;
+		}
+		state.l[0] = ((state.l[0] << nbits) & MASK) | (temp & ((limb_t(1) << nbits) - 1));
+		mixin.l[0] = (mixin.l[0] << nbits) & MASK;
+		mixup.l[0] = (mixup.l[0] << nbits) & MASK;
+	}
+	
 	static void next(word_t *state, size_t streams) {
 		word_t state0 = state[0];
 		state[0] = matrix_vector_product(XORMIX_MATRIX, state0);
@@ -313,6 +333,29 @@ struct xormix {
 			for(s = 0; s < streams; ++s) {
 				word_t mixup = (s == streams - 1)? state1 : state[s + 2];
 				mix_halfword(state[s + 1], mixin[s], mixup, XORMIX_SHIFTS);
+			}
+		}
+	}
+	
+	static void prev(word_t *state, size_t streams) {
+		state[0] = matrix_vector_product(XORMIX_MATRIX_INV, state[0]);
+		word_t state0 = state[0];
+		word_t mixin[N * L];
+		for(size_t s = 0; s < streams; ++s) {
+			mixin[s] = xor_word(shuffle_word(state0, XORMIX_SHUFFLE), XORMIX_SALTS[s]);
+			state0 = right_rotate_word(state0, 1);
+		}
+		size_t minshift = std::min(
+			std::min(XORMIX_SHIFTS[0], XORMIX_SHIFTS[1]),
+			std::min(XORMIX_SHIFTS[2], XORMIX_SHIFTS[3]));
+		size_t nparts = (N * L + minshift - 1) / minshift;
+		for(size_t h = 0; h < nparts; ++h) {
+			size_t nbits = (h == nparts - 1)? N * L - (nparts - 1) * minshift : minshift;
+			word_t statelast = state[streams];
+			for(size_t s = streams; s-- > 0; ) {
+				word_t mixup = (s == 0)? statelast : state[s];
+				word_t &mixin2 = (s == 0)? mixin[streams - 1] : mixin[s - 1];
+				unmix_partword(state[s + 1], mixin2, mixup, XORMIX_SHIFTS, nbits);
 			}
 		}
 	}

@@ -4,6 +4,7 @@
 import collections
 import math
 import numpy
+import numpy.linalg
 import random
 import subprocess
 
@@ -73,6 +74,21 @@ def generate_xormix(filename):
 			f.write(f'template<>\n')
 			write_array(f, f'const xormix{n}::matrix_t xormix{n}::XORMIX_MATRIX', n, xormatrix, 4)
 		for n in modules:
+			m = numpy.zeros((n, n), dtype=numpy.uint8)
+			for i in range(n):
+				for j in modules[n].matrix[i]:
+					m[i, j] = 1
+			minv = numpy.linalg.matrix_power(m, 2**n - 2) & 1
+			xortable = numpy.zeros(n, dtype=object)
+			for i in range(n):
+				for j in range(n):
+					xortable[j] |= int(minv[i, j]) << i
+			limbs = (n + 63) // 64
+			xormatrix = xortable.reshape((limbs, -1)).flatten('F')
+			f.write(f'\n')
+			f.write(f'template<>\n')
+			write_array(f, f'const xormix{n}::matrix_t xormix{n}::XORMIX_MATRIX_INV', n, xormatrix, 4)
+		for n in modules:
 			shuffled_salts = []
 			for s in range(n):
 				salt = modules[n].salts[s]
@@ -92,7 +108,7 @@ def generate_xormix(filename):
 			shifts = '{' + ', '.join(str(x) for x in modules[n].shifts) + '}'
 			f.write(f'\n')
 			f.write(f'template<>\n')
-			f.write(f'const size_t xormix{n}::XORMIX_SHIFTS[4] = ' + shifts + f';\n')
+			f.write(f'const size_t xormix{n}::XORMIX_SHIFTS[4] = {shifts};\n')
 
 if __name__ == '__main__':
 	generate_xormix(f'../../cpp/common/xormix.cpp')
