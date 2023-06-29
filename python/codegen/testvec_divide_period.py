@@ -30,5 +30,6 @@ def print_test(n):
 	print_array(f'static const xormix{n}::word_t divide_period_output{n}[TEST_DIVISIONS]', n, divide_period_output, 4)
 	print()
 
-for n in [16, 24, 32, 48, 64, 96, 128]:
-	print_test(n)
+if __name__ == '__main__':
+	for n in [16, 24, 32, 48, 64, 96, 128]:
+		print_test(n)

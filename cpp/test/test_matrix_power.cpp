@@ -21,6 +21,7 @@ static const xormix16::matrix_t matrix_power_output16 = {
 	UINT16_C(0x2527), UINT16_C(0xed55), UINT16_C(0xa7b8), UINT16_C(0xf6b1),
 	UINT16_C(0xc211), UINT16_C(0x329c), UINT16_C(0x5024), UINT16_C(0x60bf),
 };
+
 static const xormix24::word_t matrix_power24 = {
 	UINT32_C(0x346b8f),
 };
@@ -40,6 +41,7 @@ static const xormix24::matrix_t matrix_power_output24 = {
 	UINT32_C(0xfa9876), UINT32_C(0xc2c88a), UINT32_C(0xab1219), UINT32_C(0x284fa0),
 	UINT32_C(0x03f1fa), UINT32_C(0x356f32), UINT32_C(0xee0031), UINT32_C(0x01e19e),
 };
+
 static const xormix32::word_t matrix_power32 = {
 	UINT32_C(0x4a95f60b),
 };
@@ -63,6 +65,7 @@ static const xormix32::matrix_t matrix_power_output32 = {
 	UINT32_C(0x5894d9b7), UINT32_C(0xc4abf8dd), UINT32_C(0x370b5b50), UINT32_C(0x53619108),
 	UINT32_C(0x46ff2df2), UINT32_C(0x3adf747d), UINT32_C(0x4751625d), UINT32_C(0x15fd7cf1),
 };
+
 static const xormix48::word_t matrix_power48 = {
 	UINT64_C(0xa898528149d1),
 };
@@ -94,6 +97,7 @@ static const xormix48::matrix_t matrix_power_output48 = {
 	UINT64_C(0x1a88a63c5b7b), UINT64_C(0xdd38ad8a962b), UINT64_C(0x3a0ff462144c), UINT64_C(0xf28f70b66576),
 	UINT64_C(0xe15fbd8687a5), UINT64_C(0xb2c6b574c3f4), UINT64_C(0x3a1aa617d923), UINT64_C(0x03f4d1d6afab),
 };
+
 static const xormix64::word_t matrix_power64 = {
 	UINT64_C(0x752188b6c8ed0c61),
 };
@@ -133,6 +137,7 @@ static const xormix64::matrix_t matrix_power_output64 = {
 	UINT64_C(0xd48dc1ad8938bb1a), UINT64_C(0xc38bdbe70ab6fdef), UINT64_C(0xa272ed9ac7f5d7bb), UINT64_C(0xafecc644045421b8),
 	UINT64_C(0xcaf5bf2312f35e75), UINT64_C(0xefbb430e59735f21), UINT64_C(0xe83c3834df7c8fa7), UINT64_C(0x705dd05287c20683),
 };
+
 static const xormix96::word_t matrix_power96 = {
 	UINT64_C(0x781e2e825567), UINT64_C(0x68a1f9e59de2),
 };
@@ -236,6 +241,7 @@ static const xormix96::matrix_t matrix_power_output96 = {
 	UINT64_C(0x035023f33d03), UINT64_C(0xde4cfe2d25e5), UINT64_C(0xe536bda86724), UINT64_C(0x6f8633134e30),
 	UINT64_C(0x0eeed4faca67), UINT64_C(0x43dbeb918c21), UINT64_C(0x42e5e018785b), UINT64_C(0xa0357a7a4ca7),
 };
+
 static const xormix128::word_t matrix_power128 = {
 	UINT64_C(0x176cb028545d80e2), UINT64_C(0x5da267816f157e51),
 };

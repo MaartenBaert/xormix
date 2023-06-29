@@ -7,9 +7,6 @@ from xormix_all import modules
 
 random.seed(0x3f10d933ecfc0a73)
 
-test_streams = 4
-test_outputs = 100
-
 def print_array(name, n, words, cols):
 	limbs = (n + 63) // 64
 	nl = n // limbs
@@ -26,16 +23,19 @@ def print_array(name, n, words, cols):
 		print('\t' + ', '.join(values[i : i + cols]) + ',')
 	print('};')
 
-def print_test(n):
+def print_test(n, test_streams=4, test_outputs=100):
 	seed = [random.getrandbits(n) for i in range(test_streams + 1)]
 	state = seed.copy()
 	output = []
 	for i in range(test_outputs):
 		modules[n].next_state(state)
 		output += state
-	print_array(f'static const xormix{n}::word_t xormix{n}_seeds[TEST_STREAMS + 1]', n, seed, 5)
-	print_array(f'static const xormix{n}::word_t xormix{n}_output[TEST_OUTPUTS][TEST_STREAMS + 1]', n, output, 5)
+	print(f'static constexpr size_t XORMIX{n}_TEST_STREAMS = {test_streams};')
+	print(f'static constexpr size_t XORMIX{n}_TEST_OUTPUTS = {test_outputs};')
+	print_array(f'static const xormix{n}::word_t xormix{n}_seeds[XORMIX{n}_TEST_STREAMS + 1]', n, seed, 5)
+	print_array(f'static const xormix{n}::word_t xormix{n}_output[XORMIX{n}_TEST_OUTPUTS][XORMIX{n}_TEST_STREAMS + 1]', n, output, 5)
 	print()
 
-for n in [16, 24, 32, 48, 64, 96, 128]:
-	print_test(n)
+if __name__ == '__main__':
+	for n in [16, 24, 32, 48, 64, 96, 128]:
+		print_test(n)

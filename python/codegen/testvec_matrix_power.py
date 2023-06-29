@@ -35,6 +35,8 @@ def print_test(n):
 	print_array(f'static const xormix{n}::word_t matrix_power{n}', n, [power], 4)
 	print_array(f'static const xormix{n}::matrix_t matrix_power_input{n}', n, matrix_input2, 4)
 	print_array(f'static const xormix{n}::matrix_t matrix_power_output{n}', n, matrix_output2, 4)
+	print()
 
-for n in [16, 24, 32, 48, 64, 96, 128]:
-	print_test(n)
+if __name__ == '__main__':
+	for n in [16, 24, 32, 48, 64, 96, 128]:
+		print_test(n)
