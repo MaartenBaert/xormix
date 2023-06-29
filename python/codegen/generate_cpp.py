@@ -109,6 +109,14 @@ def generate_xormix(filename):
 			f.write(f'\n')
 			f.write(f'template<>\n')
 			f.write(f'const size_t xormix{n}::XORMIX_SHIFTS[4] = {shifts};\n')
+		f.write(f'\n')
+		f.write(f'template class xormix<uint16_t, 16, 1>;\n');
+		f.write(f'template class xormix<uint32_t, 24, 1>;\n');
+		f.write(f'template class xormix<uint32_t, 32, 1>;\n');
+		f.write(f'template class xormix<uint64_t, 48, 1>;\n');
+		f.write(f'template class xormix<uint64_t, 64, 1>;\n');
+		f.write(f'template class xormix<uint64_t, 48, 2>;\n');
+		f.write(f'template class xormix<uint64_t, 64, 2>;\n');
 
 if __name__ == '__main__':
 	generate_xormix(f'../../cpp/common/xormix.cpp')

@@ -724,3 +724,11 @@ const size_t xormix96::XORMIX_SHIFTS[4] = {45, 46, 36, 43};
 
 template<>
 const size_t xormix128::XORMIX_SHIFTS[4] = {47, 61, 56, 62};
+
+template class xormix<uint16_t, 16, 1>;
+template class xormix<uint32_t, 24, 1>;
+template class xormix<uint32_t, 32, 1>;
+template class xormix<uint64_t, 48, 1>;
+template class xormix<uint64_t, 64, 1>;
+template class xormix<uint64_t, 48, 2>;
+template class xormix<uint64_t, 64, 2>;

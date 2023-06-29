@@ -428,6 +428,14 @@ struct xormix {
 	
 };
 
+extern template class xormix<uint16_t, 16, 1>;
+extern template class xormix<uint32_t, 24, 1>;
+extern template class xormix<uint32_t, 32, 1>;
+extern template class xormix<uint64_t, 48, 1>;
+extern template class xormix<uint64_t, 64, 1>;
+extern template class xormix<uint64_t, 48, 2>;
+extern template class xormix<uint64_t, 64, 2>;
+
 typedef xormix<uint16_t, 16, 1> xormix16;
 typedef xormix<uint32_t, 24, 1> xormix24;
 typedef xormix<uint32_t, 32, 1> xormix32;
