@@ -226,7 +226,7 @@ public: // Python API
 					size_t offset = start + stride * j;
 					size_t kk = offset / N, k = offset % N;
 					T result = T(raw(i, kk) >> k);
-					for(size_t l = 1; l <= (slice_bits + N - 2) / N; ++l) {
+					for(size_t l = 1; l <= (slice_bits + k - 1) / N; ++l) {
 						result |= U(raw(i, kk + l)) << (l * N - k - 1) << 1;
 					}
 					res(i, j) = T(result << (T_BITS - slice_bits)) >> (T_BITS - slice_bits);

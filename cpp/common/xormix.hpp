@@ -419,7 +419,7 @@ struct xormix {
 			return T(0);
 		size_t ii = offset / N, i = offset % N;
 		T result = T(words[ii / L].l[ii % L] >> i);
-		for(size_t j = 1; j <= (length + N - 2) / N; ++j) {
+		for(size_t j = 1; j <= (length + i - 1) / N; ++j) {
 			size_t jj = ii + j;
 			result |= U(words[jj / L].l[jj % L]) << (j * N - i - 1) << 1;
 		}
