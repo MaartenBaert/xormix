@@ -133,6 +133,13 @@ public: // Python API
 		}
 	}
 	
+	void rewind(size_t cycles) {
+		check_initialized();
+		for(size_t i = 0; i < cycles; ++i) {
+			xm::prev(m_state.data(), get_streams());
+		}
+	}
+	
 	template<typename T>
 	py::array generate_sub(size_t cycles, size_t slices, size_t slice_bits) {
 		constexpr size_t T_BITS = std::numeric_limits<T>::digits + std::numeric_limits<T>::is_signed;
@@ -162,12 +169,13 @@ public: // Python API
 	
 	py::array generate(size_t cycles, size_t slices, size_t slice_bits, bool signed_) {
 		check_initialized();
-		if(slices < 1 || slices > N * L * N * L)
+		size_t total_bits = N * L * get_streams();
+		if(slices < 1 || slices > total_bits)
 			throw std::runtime_error("Invalid number of slices");
-		if(slice_bits < 1 || slice_bits > 64)
+		if(slice_bits < 1 || slice_bits > 64 || slice_bits > total_bits)
 			throw std::runtime_error("Invalid number of slice bits");
-		if(slices * slice_bits > N * L * get_streams())
-			throw std::runtime_error("The number of streams is too small to produce the requested number of bits");
+		if(slices * slice_bits > total_bits)
+			throw std::runtime_error("The number of streams is too small to produce the requested number of slices");
 		if(signed_) {
 			if(slice_bits <= 8)
 				return generate_sub<int8_t>(cycles, slices, slice_bits);
@@ -195,14 +203,14 @@ public: // Python API
 	}
 	
 	template<typename T>
-	static py::array bitslice_sub(py::array_t<limb_t, py::array::c_style> raw_data, size_t slices, size_t slice_bits, size_t start_bit) {
+	static py::array bitslice_sub(py::array_t<limb_t, py::array::c_style> raw_data, size_t slices, size_t slice_bits, size_t start, size_t stride) {
 		constexpr size_t T_BITS = std::numeric_limits<T>::digits + std::numeric_limits<T>::is_signed;
 		typedef typename std::conditional<(T_BITS > xm::LIMB_BITS), T, limb_t>::type U;
 		size_t cycles = raw_data.shape(0);
 		py::array_t<T, py::array::c_style> result({cycles, slices});
 		auto raw = raw_data.template unchecked<2>();
 		auto res = result.template mutable_unchecked<2>();
-		if(slice_bits == N && T_BITS >= N) {
+		if(slice_bits == N && start == 0 && stride == N && T_BITS >= N) {
 			for(size_t i = 0; i < cycles; ++i) {
 				for(size_t j = 0; j < slices; ++j) {
 					if(std::numeric_limits<T>::is_signed && T_BITS > N) {
@@ -215,7 +223,7 @@ public: // Python API
 		} else {
 			for(size_t i = 0; i < cycles; ++i) {
 				for(size_t j = 0; j < slices; ++j) {
-					size_t offset = start_bit + slice_bits * j;
+					size_t offset = start + stride * j;
 					size_t kk = offset / N, k = offset % N;
 					T result = T(raw(i, kk) >> k);
 					for(size_t l = 1; l <= (slice_bits + N - 2) / N; ++l) {
@@ -228,37 +236,40 @@ public: // Python API
 		return result;
 	}
 	
-	static py::array bitslice(py::array_t<limb_t> raw_data, size_t slices, size_t slice_bits, bool signed_, size_t start_bit) {
+	static py::array bitslice(py::array_t<limb_t> raw_data, size_t slices, size_t slice_bits, bool signed_, size_t start, size_t stride) {
 		if(raw_data.ndim() != 2)
 			throw std::runtime_error("Raw data array should be 2-dimensional");
 		if(raw_data.shape(1) == 0)
 			throw std::runtime_error("Raw data array should have at least one column");
-		if(slices < 1)
+		size_t total_bits = N * raw_data.shape(1);
+		if(slices < 1 || slices > total_bits)
 			throw std::runtime_error("Invalid number of slices");
-		if(slice_bits < 1 || slice_bits > 64)
+		if(slice_bits < 1 || slice_bits > 64 || slice_bits > total_bits)
 			throw std::runtime_error("Invalid number of slice bits");
-		if(start_bit >= N * raw_data.shape(1))
-			throw std::runtime_error("Invalid start bit");
-		if(slices > (N * raw_data.shape(1) - start_bit) / slice_bits)
-			throw std::runtime_error("The number of raw data columns is too small to produce the requested number of bits");
+		if(start > total_bits - slice_bits)
+			throw std::runtime_error("Invalid start value");
+		if(stride == 0)
+			stride = slice_bits;
+		if(slices > (total_bits - slice_bits - start) / stride + 1)
+			throw std::runtime_error("The number of raw data columns is too small to produce the requested number of slices");
 		if(signed_) {
 			if(slice_bits <= 8)
-				return bitslice_sub<int8_t>(raw_data, slices, slice_bits, start_bit);
+				return bitslice_sub<int8_t>(raw_data, slices, slice_bits, start, stride);
 			else if(slice_bits <= 16)
-				return bitslice_sub<int16_t>(raw_data, slices, slice_bits, start_bit);
+				return bitslice_sub<int16_t>(raw_data, slices, slice_bits, start, stride);
 			else if(slice_bits <= 32)
-				return bitslice_sub<int32_t>(raw_data, slices, slice_bits, start_bit);
+				return bitslice_sub<int32_t>(raw_data, slices, slice_bits, start, stride);
 			else
-				return bitslice_sub<int64_t>(raw_data, slices, slice_bits, start_bit);
+				return bitslice_sub<int64_t>(raw_data, slices, slice_bits, start, stride);
 		} else {
 			if(slice_bits <= 8)
-				return bitslice_sub<uint8_t>(raw_data, slices, slice_bits, start_bit);
+				return bitslice_sub<uint8_t>(raw_data, slices, slice_bits, start, stride);
 			else if(slice_bits <= 16)
-				return bitslice_sub<uint16_t>(raw_data, slices, slice_bits, start_bit);
+				return bitslice_sub<uint16_t>(raw_data, slices, slice_bits, start, stride);
 			else if(slice_bits <= 32)
-				return bitslice_sub<uint32_t>(raw_data, slices, slice_bits, start_bit);
+				return bitslice_sub<uint32_t>(raw_data, slices, slice_bits, start, stride);
 			else
-				return bitslice_sub<uint64_t>(raw_data, slices, slice_bits, start_bit);
+				return bitslice_sub<uint64_t>(raw_data, slices, slice_bits, start, stride);
 		}
 	}
 	
@@ -270,6 +281,7 @@ public: // Python API
 				py::arg("streams"))
 			.def(py::init<size_t, const py::int_&>(), "Create a new PRNG instance with a given state.",
 				py::arg("streams"), py::arg("state"))
+			.def("copy",  [](const xormix_pycpp &self) { return xormix_pycpp(self); })
 			.def("__copy__",  [](const xormix_pycpp &self) { return xormix_pycpp(self); })
 			.def("__deepcopy__", [](const xormix_pycpp &self, py::dict) { return xormix_pycpp(self); }, py::arg("memo"))
 			.def_property_readonly("streams", &xormix_pycpp::get_streams, "The number of output streams.")
@@ -281,12 +293,14 @@ public: // Python API
 				py::arg("seed_x"), py::arg("seed_y"))
 			.def("forward", &xormix_pycpp::forward, "Forwards the PRNG by the given number of cycles.",
 				py::arg("cycles"))
+			.def("rewind", &xormix_pycpp::rewind, "Rewinds the PRNG by the given number of cycles.",
+				py::arg("cycles"))
 			.def("generate", &xormix_pycpp::generate, "Generates multiple cycles of output as a bitsliced array.",
 				py::arg("cycles"), py::arg("slices"), py::arg("slice_bits"), py::arg("signed") = false)
 			.def("generate_raw", &xormix_pycpp::generate_raw, "Generates multiple cycles of output as a raw array.",
 				py::arg("cycles"))
 			.def_static("bitslice", &xormix_pycpp::bitslice, "Bitslices a raw array in a more flexible way.",
-				py::arg("raw_data"), py::arg("slices"), py::arg("slice_bits"), py::arg("signed") = false, py::arg("start_bit") = 0);
+				py::arg("raw_data"), py::arg("slices"), py::arg("slice_bits"), py::arg("signed") = false, py::arg("start") = 0, py::arg("stride") = 0);
 		c.attr("REVISION") = xm::REVISION;
 		return c;
 	}
