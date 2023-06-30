@@ -37,6 +37,7 @@ if(BUILD_TESTS)
 		test/test_matrix_inverse.cpp
 		test/test_matrix_power.cpp
 		test/test_output.cpp
+		test/test_output_wide.cpp
 		test/test_reverse.cpp
 		test/tests.cpp
 	)
