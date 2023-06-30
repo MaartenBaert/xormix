@@ -39,6 +39,7 @@ Documentation
 - [Xormix Algorithm](doc/algorithm.md)
 - [Xormix Design Criteria](doc/design-criteria.md)
 - [Xormix Hardware Module (VHDL/Verilog) Interface](doc/hardware-interface.md)
+- [Python Bindings of Xormix C++ Implementation](doc/python-bindings-cpp.md)
 - [Mathematical Properties of Xormix Variants](doc/mathematical-properties.md)
 - [Randomness Test Results](doc/randomness-test-results.md)
 
@@ -47,7 +48,7 @@ Implementations
 
 Portable hardware implementations and simple testbenches written in VHDL and Verilog are available in the `vhdl` and `verilog` directories. Additionally, a non-portable implementation optimized for Xilinx 7 Series FPGAs is available in the `vhdl_x7s` directory.
 
-Two software implementations are also available for testing and verification purposes. The reference implementation is written in Python and can be found in the `python/reference` directory. This implementation is easy to understand and was used to generate the test vectors for all other implementations, but it is very slow. A much faster C++ implementation can be found in the `cpp` folder, along with a command-line tool (`xormix-tool`) which can be used to generate seeds and random output in various formats.
+Two software implementations are also available for testing and verification purposes. The reference implementation is written in Python and can be found in the `python/reference` directory. This implementation is easy to understand and was used to generate the test vectors for all other implementations, but it is very slow. A much faster C++ implementation can be found in the `cpp` directory, along with a command-line tool (`xormix-tool`) which can be used to generate seeds and random output in various formats. The python module `xormix_pycpp` provides python bindings of the C++ implementation and can be found in the `cpp/pycpp` directory.
 
 Note that even the optimized C++ implementation is still much slower than other pseudorandom number generators that were designed to be fast in software. Xormix is not meant to be used in software-only applications, the design only makes sense when implemented in hardware.
 

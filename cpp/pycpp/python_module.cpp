@@ -277,11 +277,11 @@ public: // Python API
 	
 	static py::object python_bindings(py::module_ &m, const char *class_name) {
 		py::object c = py::class_<xormix_pycpp>(m, class_name, "Xormix PRNG instance")
-			.def(py::init<size_t>(), "Create a new PRNG instance.",
+			.def(py::init<size_t>(), "Creates a new PRNG instance.",
 				py::arg("streams"))
-			.def(py::init<size_t, const py::int_&>(), "Create a new PRNG instance with a given state.",
+			.def(py::init<size_t, const py::int_&>(), "Creates a new PRNG instance with a given state.",
 				py::arg("streams"), py::arg("state"))
-			.def("copy",  [](const xormix_pycpp &self) { return xormix_pycpp(self); })
+			.def("copy",  [](const xormix_pycpp &self) { return xormix_pycpp(self); }, "Creates a copy of the PRNG instance.")
 			.def("__copy__",  [](const xormix_pycpp &self) { return xormix_pycpp(self); })
 			.def("__deepcopy__", [](const xormix_pycpp &self, py::dict) { return xormix_pycpp(self); }, py::arg("memo"))
 			.def_property_readonly("streams", &xormix_pycpp::get_streams, "The number of output streams.")
@@ -295,11 +295,11 @@ public: // Python API
 				py::arg("cycles"))
 			.def("rewind", &xormix_pycpp::rewind, "Rewinds the PRNG by the given number of cycles.",
 				py::arg("cycles"))
-			.def("generate", &xormix_pycpp::generate, "Generates multiple cycles of output as a bitsliced array.",
+			.def("generate", &xormix_pycpp::generate, "Generates multiple cycles of bitsliced output as a numpy array.",
 				py::arg("cycles"), py::arg("slices"), py::arg("slice_bits"), py::arg("signed") = false)
-			.def("generate_raw", &xormix_pycpp::generate_raw, "Generates multiple cycles of output as a raw array.",
+			.def("generate_raw", &xormix_pycpp::generate_raw, "Generates multiple cycles of raw output as a numpy array.",
 				py::arg("cycles"))
-			.def_static("bitslice", &xormix_pycpp::bitslice, "Bitslices a raw array in a more flexible way.",
+			.def_static("bitslice", &xormix_pycpp::bitslice, "Bitslices a numpy array containing raw output in a more flexible way.",
 				py::arg("raw_data"), py::arg("slices"), py::arg("slice_bits"), py::arg("signed") = false, py::arg("start") = 0, py::arg("stride") = 0);
 		c.attr("REVISION") = xm::REVISION;
 		return c;
