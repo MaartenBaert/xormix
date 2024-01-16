@@ -143,7 +143,7 @@ public: // Python API
 	template<typename T>
 	py::array generate_sub(size_t cycles, size_t slices, size_t slice_bits) {
 		constexpr size_t T_BITS = std::numeric_limits<T>::digits + std::numeric_limits<T>::is_signed;
-		py::array_t<T, py::array::c_style> result({cycles, slices});
+		py::array_t<T, py::array::c_style> result({py::ssize_t(cycles), py::ssize_t(slices)});
 		auto res = result.template mutable_unchecked<2>();
 		if(slice_bits == N && T_BITS >= N) {
 			for(size_t i = 0; i < cycles; ++i) {
@@ -170,7 +170,9 @@ public: // Python API
 	py::array generate(size_t cycles, size_t slices, size_t slice_bits, bool signed_) {
 		check_initialized();
 		size_t total_bits = N * L * get_streams();
-		if(slices < 1 || slices > total_bits)
+		if(cycles > std::numeric_limits<py::ssize_t>::max())
+			throw std::runtime_error("Invalid number of cycles");
+		if(slices < 1 || slices > total_bits || slices > std::numeric_limits<py::ssize_t>::max())
 			throw std::runtime_error("Invalid number of slices");
 		if(slice_bits < 1 || slice_bits > 64 || slice_bits > total_bits)
 			throw std::runtime_error("Invalid number of slice bits");
@@ -199,24 +201,26 @@ public: // Python API
 	
 	py::array generate_raw(size_t cycles) {
 		check_initialized();
+		if(cycles > std::numeric_limits<py::ssize_t>::max())
+			throw std::runtime_error("Invalid number of cycles");
 		return generate_sub<limb_t>(cycles, L * get_streams(), N);
 	}
 	
 	template<typename T>
-	static py::array bitslice_sub(py::array_t<limb_t, py::array::c_style> raw_data, size_t slices, size_t slice_bits, size_t start, size_t stride) {
+	static py::array bitslice1_sub(py::array_t<limb_t, py::array::c_style> raw_data, size_t slices, size_t slice_bits, size_t start, size_t stride) {
 		constexpr size_t T_BITS = std::numeric_limits<T>::digits + std::numeric_limits<T>::is_signed;
 		typedef typename std::conditional<(T_BITS > xm::LIMB_BITS), T, limb_t>::type U;
 		size_t cycles = raw_data.shape(0);
-		py::array_t<T, py::array::c_style> result({cycles, slices});
-		auto raw = raw_data.template unchecked<2>();
-		auto res = result.template mutable_unchecked<2>();
+		py::array_t<T, py::array::c_style> result({py::ssize_t(cycles), py::ssize_t(slices)});
+		auto raw_view = raw_data.template unchecked<2>();
+		auto res_view = result.template mutable_unchecked<2>();
 		if(slice_bits == N && start == 0 && stride == N && T_BITS >= N) {
 			for(size_t i = 0; i < cycles; ++i) {
 				for(size_t j = 0; j < slices; ++j) {
 					if(std::numeric_limits<T>::is_signed && T_BITS > N) {
-						res(i, j) = T(raw(i, j)) << (T_BITS - N) >> (T_BITS - N);
+						res_view(i, j) = T(raw_view(i, j)) << (T_BITS - N) >> (T_BITS - N);
 					} else {
-						res(i, j) = raw(i, j);
+						res_view(i, j) = raw_view(i, j);
 					}
 				}
 			}
@@ -225,24 +229,50 @@ public: // Python API
 				for(size_t j = 0; j < slices; ++j) {
 					size_t offset = start + stride * j;
 					size_t kk = offset / N, k = offset % N;
-					T result = T(raw(i, kk) >> k);
+					T result = T(raw_view(i, kk) >> k);
 					for(size_t l = 1; l <= (slice_bits + k - 1) / N; ++l) {
-						result |= U(raw(i, kk + l)) << (l * N - k - 1) << 1;
+						result |= U(raw_view(i, kk + l)) << (l * N - k - 1) << 1;
 					}
-					res(i, j) = T(result << (T_BITS - slice_bits)) >> (T_BITS - slice_bits);
+					res_view(i, j) = T(result << (T_BITS - slice_bits)) >> (T_BITS - slice_bits);
 				}
 			}
 		}
 		return result;
 	}
 	
-	static py::array bitslice(py::array_t<limb_t> raw_data, size_t slices, size_t slice_bits, bool signed_, size_t start, size_t stride) {
+	template<typename T>
+	static py::array bitslice2_sub(py::array_t<limb_t, py::array::c_style> raw_data, py::array_t<size_t> slice_bits, py::array_t<size_t> offsets) {
+		constexpr size_t T_BITS = std::numeric_limits<T>::digits + std::numeric_limits<T>::is_signed;
+		typedef typename std::conditional<(T_BITS > xm::LIMB_BITS), T, limb_t>::type U;
+		size_t cycles = raw_data.shape(0);
+		size_t slices = slice_bits.shape(0);
+		py::array_t<T, py::array::c_style> result({py::ssize_t(cycles), py::ssize_t(slices)});
+		auto raw_view = raw_data.template unchecked<2>();
+		auto res_view = result.template mutable_unchecked<2>();
+		auto slice_bits_view = slice_bits.template unchecked<1>();
+		auto offsets_view = offsets.template unchecked<1>();
+		for(size_t i = 0; i < cycles; ++i) {
+			for(size_t j = 0; j < slices; ++j) {
+				size_t current_slice_bits = slice_bits_view(j);
+				size_t current_offset = offsets_view(j);
+				size_t kk = current_offset / N, k = current_offset % N;
+				T result = T(raw_view(i, kk) >> k);
+				for(size_t l = 1; l <= (current_slice_bits + k - 1) / N; ++l) {
+					result |= U(raw_view(i, kk + l)) << (l * N - k - 1) << 1;
+				}
+				res_view(i, j) = T(result << (T_BITS - current_slice_bits)) >> (T_BITS - current_slice_bits);
+			}
+		}
+		return result;
+	}
+	
+	static py::array bitslice1(py::array_t<limb_t> raw_data, size_t slices, size_t slice_bits, bool signed_, size_t start, size_t stride) {
 		if(raw_data.ndim() != 2)
 			throw std::runtime_error("Raw data array should be 2-dimensional");
 		if(raw_data.shape(1) == 0)
 			throw std::runtime_error("Raw data array should have at least one column");
 		size_t total_bits = N * raw_data.shape(1);
-		if(slices < 1 || slices > total_bits)
+		if(slices < 1 || slices > total_bits || slices > std::numeric_limits<py::ssize_t>::max())
 			throw std::runtime_error("Invalid number of slices");
 		if(slice_bits < 1 || slice_bits > 64 || slice_bits > total_bits)
 			throw std::runtime_error("Invalid number of slice bits");
@@ -254,23 +284,91 @@ public: // Python API
 			throw std::runtime_error("The number of raw data columns is too small to produce the requested number of slices");
 		if(signed_) {
 			if(slice_bits <= 8)
-				return bitslice_sub<int8_t>(raw_data, slices, slice_bits, start, stride);
+				return bitslice1_sub<int8_t>(raw_data, slices, slice_bits, start, stride);
 			else if(slice_bits <= 16)
-				return bitslice_sub<int16_t>(raw_data, slices, slice_bits, start, stride);
+				return bitslice1_sub<int16_t>(raw_data, slices, slice_bits, start, stride);
 			else if(slice_bits <= 32)
-				return bitslice_sub<int32_t>(raw_data, slices, slice_bits, start, stride);
+				return bitslice1_sub<int32_t>(raw_data, slices, slice_bits, start, stride);
 			else
-				return bitslice_sub<int64_t>(raw_data, slices, slice_bits, start, stride);
+				return bitslice1_sub<int64_t>(raw_data, slices, slice_bits, start, stride);
 		} else {
 			if(slice_bits <= 8)
-				return bitslice_sub<uint8_t>(raw_data, slices, slice_bits, start, stride);
+				return bitslice1_sub<uint8_t>(raw_data, slices, slice_bits, start, stride);
 			else if(slice_bits <= 16)
-				return bitslice_sub<uint16_t>(raw_data, slices, slice_bits, start, stride);
+				return bitslice1_sub<uint16_t>(raw_data, slices, slice_bits, start, stride);
 			else if(slice_bits <= 32)
-				return bitslice_sub<uint32_t>(raw_data, slices, slice_bits, start, stride);
+				return bitslice1_sub<uint32_t>(raw_data, slices, slice_bits, start, stride);
 			else
-				return bitslice_sub<uint64_t>(raw_data, slices, slice_bits, start, stride);
+				return bitslice1_sub<uint64_t>(raw_data, slices, slice_bits, start, stride);
 		}
+	}
+	
+	static py::array bitslice2(py::array_t<limb_t> raw_data, py::array_t<size_t> slice_bits, py::array_t<size_t> offsets, bool signed_) {
+		if(raw_data.ndim() != 2)
+			throw std::runtime_error("Raw data array should be 2-dimensional");
+		if(raw_data.shape(1) == 0)
+			throw std::runtime_error("Raw data array should have at least one column");
+		if(slice_bits.ndim() != 1)
+			throw std::runtime_error("Slice bits array should be 1-dimensional");
+		if(slice_bits.shape(0) == 0)
+			throw std::runtime_error("Slice bits array should have at least one element");
+		size_t slices = slice_bits.shape(0);
+		if(offsets.ndim() != 1)
+			throw std::runtime_error("Offsets array should be 1-dimensional");
+		if(offsets.shape(0) != slices)
+			throw std::runtime_error("Offsets array should have the same length as slice bits");
+		auto slice_bits_view = slice_bits.template unchecked<1>();
+		auto offsets_view = offsets.template unchecked<1>();
+		size_t total_bits = N * raw_data.shape(1);
+		if(slices < 1 || slices > total_bits || slices > std::numeric_limits<py::ssize_t>::max())
+			throw std::runtime_error("Invalid number of slices");
+		size_t max_slice_bits = 0;
+		for(size_t i = 0; i < slices; ++i) {
+			size_t current_slice_bits = slice_bits_view(i);
+			size_t current_offset = offsets_view(i);
+			if(current_slice_bits < 1 || current_slice_bits > 64)
+				throw std::runtime_error("Invalid number of slice bits");
+			if(current_offset >= total_bits || current_slice_bits > total_bits - current_offset)
+				throw std::runtime_error("The number of raw data columns is too small to produce the requested slices");
+			if(current_slice_bits > max_slice_bits)
+				max_slice_bits = current_slice_bits;
+		}
+		if(signed_) {
+			if(max_slice_bits <= 8)
+				return bitslice2_sub<int8_t>(raw_data, slice_bits, offsets);
+			else if(max_slice_bits <= 16)
+				return bitslice2_sub<int16_t>(raw_data, slice_bits, offsets);
+			else if(max_slice_bits <= 32)
+				return bitslice2_sub<int32_t>(raw_data, slice_bits, offsets);
+			else
+				return bitslice2_sub<int64_t>(raw_data, slice_bits, offsets);
+		} else {
+			if(max_slice_bits <= 8)
+				return bitslice2_sub<uint8_t>(raw_data, slice_bits, offsets);
+			else if(max_slice_bits <= 16)
+				return bitslice2_sub<uint16_t>(raw_data, slice_bits, offsets);
+			else if(max_slice_bits <= 32)
+				return bitslice2_sub<uint32_t>(raw_data, slice_bits, offsets);
+			else
+				return bitslice2_sub<uint64_t>(raw_data, slice_bits, offsets);
+		}
+	}
+	
+	static py::array bitslice3(py::array_t<limb_t> raw_data, py::array_t<size_t> slice_bits, bool signed_) {
+		if(slice_bits.ndim() != 1)
+			throw std::runtime_error("Slice bits array should be 1-dimensional");
+		if(slice_bits.shape(0) == 0)
+			throw std::runtime_error("Slice bits array should have at least one element");
+		size_t slices = slice_bits.shape(0);
+		py::array_t<size_t, py::array::c_style> offsets{py::ssize_t(slices)};
+		auto slice_bits_view = slice_bits.template unchecked<1>();
+		auto offsets_view = offsets.template mutable_unchecked<1>();
+		size_t current_offset = 0;
+		for(size_t i = 0; i < slices; ++i) {
+			offsets_view(i) = current_offset;
+			current_offset += slice_bits_view(i);
+		}
+		return bitslice2(raw_data, slice_bits, offsets, signed_);
 	}
 	
 	// Python bindings generation
@@ -299,8 +397,12 @@ public: // Python API
 				py::arg("cycles"), py::arg("slices"), py::arg("slice_bits"), py::arg("signed") = false)
 			.def("generate_raw", &xormix_pycpp::generate_raw, "Generates multiple cycles of raw output as a numpy array.",
 				py::arg("cycles"))
-			.def_static("bitslice", &xormix_pycpp::bitslice, "Bitslices a numpy array containing raw output in a more flexible way.",
-				py::arg("raw_data"), py::arg("slices"), py::arg("slice_bits"), py::arg("signed") = false, py::arg("start") = 0, py::arg("stride") = 0);
+			.def_static("bitslice", &xormix_pycpp::bitslice1, "Bitslices a numpy array using fixed bit widths.",
+				py::arg("raw_data"), py::arg("slices"), py::arg("slice_bits"), py::arg("signed") = false, py::arg("start") = 0, py::arg("stride") = 0)
+			.def_static("bitslice", &xormix_pycpp::bitslice2, "Bitslices a numpy array using arbitrary bit widths and offsets.",
+				py::arg("raw_data"), py::arg("slice_bits"), py::arg("offsets"), py::arg("signed") = false)
+			.def_static("bitslice", &xormix_pycpp::bitslice3, "Bitslices a numpy array using arbitrary bit widths, assuming dense packing.",
+				py::arg("raw_data"), py::arg("slice_bits"), py::arg("signed") = false);
 		c.attr("REVISION") = xm::REVISION;
 		return c;
 	}

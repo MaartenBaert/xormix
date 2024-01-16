@@ -114,7 +114,19 @@ Generates multiple cycles of raw output as a numpy array. `cycles` specifies the
 
 ### xormix*N*.bitslice(raw_data : numpy.ndarray, slices : int, slice_bits : int, signed : bool = False, start : int = 0, stride : int = 0)
 
-Bitslices a raw output array in a more flexible way. The format of `raw_data` should match the format returned by `generate_raw`, however the number of columns may be different (this allows combining the output of multiple xormix instances). `slices`, `slice_bits` and `signed` behave the same as the corresponding arguments of the `generate` function. `start` specifies the index of the first bit that will be used (this can be used to extract multiple values with different bit widths). `stride` specifies by how much the bit index should be incremented to go to the next slice (this can be used to extract interleaved values). If `stride` is 0 (the default), it is set to `slice_bits`.
+Bitslices a raw output array using fixed bit widths. The format of `raw_data` should match the format returned by `generate_raw`, however the number of columns may be different (this allows combining the output of multiple xormix instances). `slices`, `slice_bits` and `signed` behave the same as the corresponding arguments of the `generate` function. `start` specifies the index of the first bit that will be used (this can be used to extract multiple values with different bit widths). `stride` specifies by how much the bit index should be incremented to go to the next slice (this can be used to extract interleaved values). If `stride` is 0 (the default), it is set to `slice_bits`.
+
+This is a static method, so it is not necessary to create a PRNG instance to use it.
+
+### xormix*N*.bitslice(raw_data : numpy.ndarray, slice_bits : numpy.ndarray, offsets : numpy.ndarray, signed : bool = False)
+
+Bitslices a numpy array using arbitrary bit widths and offsets. This function is very similar to the previous one, but allows extracting multiple slices with different bit widths at arbitrary offsets within the raw data. `slice_bits` is an array that specifies the number of bits for each slice. `offsets` specifies the index of the first bit of each slice, and should have the same length as `slice_bits`.
+
+This is a static method, so it is not necessary to create a PRNG instance to use it.
+
+### xormix*N*.bitslice(raw_data : numpy.ndarray, slice_bits : numpy.ndarray, signed : bool = False)
+
+Bitslices a numpy array using arbitrary bit widths, assuming dense packing. This function is identical to the previous one except that it calculates the `offsets` array automatically based on `slice_bits`, such that the requested slices are densely packed. This is equivalent to calling the previous function with `offsets` set to `np.cumsum(slice_bits) - slice_bits`.
 
 This is a static method, so it is not necessary to create a PRNG instance to use it.
 
