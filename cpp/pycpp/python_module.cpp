@@ -315,7 +315,7 @@ public: // Python API
 		size_t slices = slice_bits.shape(0);
 		if(offsets.ndim() != 1)
 			throw std::runtime_error("Offsets array should be 1-dimensional");
-		if(offsets.shape(0) != slices)
+		if(offsets.shape(0) != py::ssize_t(slices))
 			throw std::runtime_error("Offsets array should have the same length as slice bits");
 		auto slice_bits_view = slice_bits.template unchecked<1>();
 		auto offsets_view = offsets.template unchecked<1>();
