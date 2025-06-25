@@ -35,23 +35,39 @@ private: // Helper functions
 	static word_t pyint_to_word(const py::int_ &val) {
 		word_t result;
 		uint8_t bytes[xm::WORD_BYTES];
+#if PY_VERSION_HEX >= 0x030d0000
+		Py_ssize_t res = PyLong_AsNativeBytes(val.ptr(), bytes, xm::WORD_BYTES, Py_ASNATIVEBYTES_NATIVE_ENDIAN | Py_ASNATIVEBYTES_UNSIGNED_BUFFER | Py_ASNATIVEBYTES_REJECT_NEGATIVE);
+		if(res < 0 || res > xm::WORD_BYTES)
+			throw std::runtime_error("Could not convert python int to xormix word");
+#else
 		if(_PyLong_AsByteArray((PyLongObject*) val.ptr(), bytes, xm::WORD_BYTES, 1, 0) != 0)
 			throw std::runtime_error("Could not convert python int to xormix word");
+#endif
 		xm::unpack_words(bytes, &result, 1);
 		return result;
 	}
 	
 	static void pyint_to_words(const py::int_ &val, word_t *words, size_t num_words) {
 		std::vector<uint8_t> bytes(xm::WORD_BYTES * num_words);
+#if PY_VERSION_HEX >= 0x030d0000
+		Py_ssize_t res = PyLong_AsNativeBytes(val.ptr(), bytes.data(), bytes.size(), Py_ASNATIVEBYTES_NATIVE_ENDIAN | Py_ASNATIVEBYTES_UNSIGNED_BUFFER | Py_ASNATIVEBYTES_REJECT_NEGATIVE);
+		if(res < 0 || res > bytes.size())
+			throw std::runtime_error("Could not convert python int to xormix words");
+#else
 		if(_PyLong_AsByteArray((PyLongObject*) val.ptr(), bytes.data(), bytes.size(), 1, 0) != 0)
 			throw std::runtime_error("Could not convert python int to xormix words");
+#endif
 		xm::unpack_words(bytes.data(), words, num_words);
 	}
 	
 	static py::int_ pyint_from_words(const word_t *words, size_t num_words) {
 		std::vector<uint8_t> bytes(xm::WORD_BYTES * num_words);
 		xm::pack_words(bytes.data(), words, num_words);
+#if PY_VERSION_HEX >= 0x030d0000
+		PyObject *ptr = PyLong_FromNativeBytes(bytes.data(), bytes.size(), Py_ASNATIVEBYTES_NATIVE_ENDIAN | Py_ASNATIVEBYTES_UNSIGNED_BUFFER);
+#else
 		PyObject *ptr = _PyLong_FromByteArray(bytes.data(), bytes.size(), 1, 0);
+#endif
 		if(ptr == nullptr)
 			throw std::runtime_error("Could not convert xormix words to python int");
 		return py::reinterpret_steal<py::int_>(ptr);

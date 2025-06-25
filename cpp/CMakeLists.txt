@@ -6,7 +6,7 @@ project(xormix VERSION 0.0.0)
 
 option(BUILD_TOOL "Build xormix-tool executable" ON)
 option(BUILD_TESTS "Build xormix-tests executable" ON)
-option(BUILD_PYTHON "Build xormix_avalanche python module (requires pybind11)" OFF)
+option(BUILD_PYTHON "Build xormix python modules (requires pybind11)" OFF)
 
 option(WITH_GETRANDOM "Use the getrandom() system call instead of /dev/urandom (requires Linux 3.17 or newer)" ON)
 
@@ -52,21 +52,21 @@ if(BUILD_PYTHON)
 		3rdparty/pcg.hpp
 		common/xormix.cpp
 		common/xormix.hpp
-		pycpp/avalanche.cpp
+		pycpp/xormix_avalanche.cpp
 	)
 	target_include_directories(xormix_avalanche PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 	
 	pybind11_add_module(xormix_discrete_log
 		common/xormix.cpp
 		common/xormix.hpp
-		pycpp/discrete_log.cpp
+		pycpp/xormix_discrete_log.cpp
 	)
 	target_include_directories(xormix_discrete_log PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 	
 	pybind11_add_module(xormix_pycpp
 		common/xormix.cpp
 		common/xormix.hpp
-		pycpp/python_module.cpp
+		pycpp/xormix_pycpp.cpp
 	)
 	target_include_directories(xormix_pycpp PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 	
