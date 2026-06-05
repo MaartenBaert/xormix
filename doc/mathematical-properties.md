@@ -11,7 +11,7 @@ This page lists the 'magic constants' and the resulting mathematical properties 
 - [Xormix96](mathematical-properties-xormix96.md)
 - [Xormix128](mathematical-properties-xormix128.md)
 
-These pages are just raw data dumps. The [Xormix Algorithm](doc/algorithm.md) page explains the usage of these values.
+These pages are just raw data dumps. The [Xormix Algorithm](algorithm.md) page explains the usage of these values.
 
 LFSR decomposition
 ------------------
