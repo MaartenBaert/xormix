@@ -58,5 +58,21 @@ shuffle = [
 
 shifts = [6, 16, 9, 15]
 
+salts_fs = [
+	0xd59417ae, 0x420dfde8, 0x3c59c2d2, 0xc7f786d9,
+	0xab8280f2, 0x2f260a00, 0x76349dde, 0xe2cbb6c7,
+	0x5561a254, 0x9810899d, 0x1b827534, 0xeb5a0db6,
+	0xb7a15719, 0x392584e1, 0xc8d1f233, 0x645693a8,
+	0x8597e66a, 0xc68d479c, 0x1bc74a56, 0xfb1fb0b0,
+	0x46ca8508, 0x7bf99ff3, 0xb3f83554, 0x8d923b8b,
+	0xca6710a8, 0xa203cfa6, 0xe96cd51d, 0xd3ecb2bc,
+	0x5d6f872f, 0xae3dadf2, 0xd152dd55, 0x1529fd71,
+]
+
+shuffle_fs = [
+	16, 12, 30, 31,  6, 19, 17, 11,  1, 20,  9, 24,  5, 23,  0,  4,
+	 3, 10, 29, 27, 22, 25, 18,  2, 13, 28,  8,  7, 26, 14, 15, 21,
+]
+
 def next_state(state):
 	return xormix_ref.next_state(matrix, salts, shuffle, shifts, state)
