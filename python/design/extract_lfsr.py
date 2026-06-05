@@ -17,26 +17,26 @@ def extract_matrix(n, matrix):
 	return a
 
 def extract_lfsr(n, a, show_result=False, show_progress=False):
-	
+
 	p = a.copy()
 	u = numpy.identity(n, dtype=numpy.uint8)
 	v = numpy.identity(n, dtype=numpy.uint8)
-	
+
 	def row_op(i, j):
 		u[:, i] ^= u[:, j]
 		p[j, :] ^= p[i, :]
 		p[:, i] ^= p[:, j]
 		v[j, :] ^= v[i, :]
-	
+
 	def row_swap(i, j):
 		row_op(i, j)
 		row_op(j, i)
 		row_op(i, j)
-	
+
 	if show_progress:
 		print(f'Initial matrices:')
 		print_matrix(u, p, v)
-	
+
 	for i in range(n - 1):
 		s = i + 1 + p[i + 1 :, i].argmax()
 		assert p[s, i] != 0, 'Missing pivot'
@@ -50,7 +50,7 @@ def extract_lfsr(n, a, show_result=False, show_progress=False):
 		if show_progress:
 			print(f'Matrices after iteration {i + 1}:')
 			print_matrix(u, p, v)
-	
+
 	assert ((numpy.matmul(u, v) & 1) == numpy.identity(n, dtype=numpy.uint8)).all(), 'Invalid u/v matrices'
 	assert (((numpy.matmul(numpy.matmul(u, p), v)) & 1) == a).all(), 'Invalid decomposition'
 

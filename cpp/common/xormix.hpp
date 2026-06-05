@@ -29,20 +29,20 @@
 // L = number of limbs
 template<typename limb_t, size_t N, size_t L>
 struct xormix {
-	
+
 	struct word_t {
 		limb_t l[L];
 	};
 	struct matrix_t {
 		word_t w[N][L];
 	};
-	
+
 	static constexpr size_t N_ = N;
 	static constexpr size_t L_ = L;
 	static constexpr size_t WORD_BYTES = N * L / 8;
 	static constexpr size_t LIMB_BITS = std::numeric_limits<limb_t>::digits;
 	static constexpr limb_t MASK = (limb_t(2) << (N - 1)) - 1;
-	
+
 	static const size_t REVISION;
 	static const std::initializer_list<word_t> TEST_PERIODS;
 	static const matrix_t XORMIX_MATRIX, XORMIX_MATRIX_INV;
@@ -51,7 +51,7 @@ struct xormix {
 	static const size_t XORMIX_SHIFTS[4];
 	static const word_t XORMIX_SALTS_FS[N * L];
 	static const size_t XORMIX_SHUFFLE_FS[N * L];
-	
+
 	static bool word_equal(word_t a, word_t b) {
 		for(size_t ii = 0; ii < L; ++ii) {
 			if(a.l[ii] != b.l[ii])
@@ -59,7 +59,7 @@ struct xormix {
 		}
 		return true;
 	}
-	
+
 	// returns (2**(N * L) - 1) / div
 	static word_t divide_period(size_t div) {
 		word_t res = {};
@@ -76,7 +76,7 @@ struct xormix {
 		}
 		return res;
 	}
-	
+
 	static bool matrix_equal(const matrix_t &a, const matrix_t &b) {
 		for(size_t j = 0; j < N; ++j) {
 			for(size_t jj = 0; jj < L; ++jj) {
@@ -86,7 +86,7 @@ struct xormix {
 		}
 		return true;
 	}
-	
+
 	static matrix_t matrix_identity() {
 		matrix_t res;
 		for(size_t j = 0; j < N; ++j) {
@@ -98,7 +98,7 @@ struct xormix {
 		}
 		return res;
 	}
-	
+
 	static word_t matrix_vector_product(const matrix_t &mat, word_t vec) {
 		word_t res = {};
 		PRAGMA_UNROLL(64)
@@ -114,7 +114,7 @@ struct xormix {
 		}
 		return res;
 	}
-	
+
 	static matrix_t matrix_product(const matrix_t &a, const matrix_t &b) {
 		matrix_t res;
 		for(size_t j = 0; j < N; ++j) {
@@ -124,7 +124,7 @@ struct xormix {
 		}
 		return res;
 	}
-	
+
 	static matrix_t matrix_power(const matrix_t &mat, word_t pow) {
 		matrix_t res = matrix_identity();
 		matrix_t sqr = mat;
@@ -138,7 +138,7 @@ struct xormix {
 		}
 		return res;
 	}
-	
+
 	static word_t xor_word(word_t a, word_t b) {
 		word_t res;
 		PRAGMA_UNROLL(64)
@@ -147,7 +147,7 @@ struct xormix {
 		}
 		return res;
 	}
-	
+
 	static word_t right_rotate_word(word_t a, size_t k) {
 		word_t res;
 		if(L == 1) {
@@ -161,7 +161,7 @@ struct xormix {
 		}
 		return res;
 	}
-	
+
 	static limb_t right_shift_limb(word_t a, size_t k) {
 		assert(k < N * L);
 		if(L == 1) {
@@ -171,7 +171,7 @@ struct xormix {
 			return (a.l[ii] >> i) | (a.l[ii + 1] << (N - i - 1) << 1);
 		}
 	}
-	
+
 	static word_t shuffle_word(word_t a, const size_t shuffle[N * L]) {
 		word_t res = {};
 		PRAGMA_UNROLL(64)
@@ -186,7 +186,7 @@ struct xormix {
 		}
 		return res;
 	}
-	
+
 	static void shuffle_word4(word_t res[4], word_t a, const size_t shuffle[N * L]) {
 		PRAGMA_UNROLL(64)
 		for(size_t ii = 0; ii < L; ++ii) {
@@ -209,7 +209,7 @@ struct xormix {
 			res[3].l[ii] = (swp[3] & limb_t(UINT64_C(0xaaaaaaaaaaaaaaaa))) | ((swp[2] & limb_t(UINT64_C(0xaaaaaaaaaaaaaaaa))) >> 1);
 		}
 	}
-	
+
 	static void shuffle_word8(word_t res[8], word_t a, const size_t shuffle[N * L]) {
 		PRAGMA_UNROLL(64)
 		for(size_t ii = 0; ii < L; ++ii) {
@@ -278,7 +278,7 @@ struct xormix {
 			input = right_rotate_word(input, 1);
 		}
 	}
-	
+
 	static void mix_halfword(word_t &state, word_t &mixin, word_t mixup, const size_t *shifts) {
 		if(L == 1) {
 			limb_t s0 = mixup.l[0];
@@ -310,7 +310,7 @@ struct xormix {
 			}
 		}
 	}
-	
+
 	static void unmix_partword(word_t &state, word_t &mixin, word_t mixup, const size_t *shifts, size_t nbits) {
 		limb_t s0 = mixup.l[L - 1] >> (N - nbits);
 		limb_t s1 = right_shift_limb(state, shifts[0] - nbits);
@@ -328,7 +328,7 @@ struct xormix {
 		mixin.l[0] = (mixin.l[0] << nbits) & MASK;
 		mixup.l[0] = (mixup.l[0] << nbits) & MASK;
 	}
-	
+
 	static void next(word_t *state, size_t streams) {
 		word_t state0 = state[0];
 		state[0] = matrix_vector_product(XORMIX_MATRIX, state0);
@@ -390,7 +390,7 @@ struct xormix {
 			next(state, streams);
 		}
 	}
-	
+
 	static uint8_t* pack_words(uint8_t *bytes, const word_t *words, size_t num_words) {
 		for(size_t w = 0; w < num_words; ++w) {
 			word_t word = words[w];
@@ -403,7 +403,7 @@ struct xormix {
 		}
 		return bytes;
 	}
-	
+
 	static const uint8_t* unpack_words(const uint8_t *bytes, word_t *words, size_t num_words) {
 		for(size_t w = 0; w < num_words; ++w) {
 			word_t word = {};
@@ -418,7 +418,7 @@ struct xormix {
 		}
 		return bytes;
 	}
-	
+
 	template<typename T>
 	static T slice_words(const word_t *words, size_t offset, size_t length) {
 		constexpr size_t T_BITS = std::numeric_limits<T>::digits + std::numeric_limits<T>::is_signed;
@@ -433,7 +433,7 @@ struct xormix {
 		}
 		return T(result << (T_BITS - length)) >> (T_BITS - length);
 	}
-	
+
 };
 
 extern template class xormix<uint16_t, 16, 1>;

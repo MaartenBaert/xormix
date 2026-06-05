@@ -7,7 +7,7 @@ def next_state(matrix, salts, shuffle, shifts, state):
 	assert len(shuffle) == n
 	assert len(shifts) == 4
 	assert 2 <= len(state) <= n + 1
-	
+
 	# linear stage
 	state_x = state[0]
 	state_x_next = 0
@@ -15,7 +15,7 @@ def next_state(matrix, salts, shuffle, shifts, state):
 		for j in matrix[i]:
 			state_x_next ^= ((state_x >> j) & 1) << i
 	state[0] = state_x_next
-	
+
 	# shuffling
 	mixin = []
 	for s in range(len(state) - 1):
@@ -25,7 +25,7 @@ def next_state(matrix, salts, shuffle, shifts, state):
 			j = (s + shuffle[i]) % n
 			shuffled |= ((salted >> j) & 1) << i
 		mixin.append(shuffled)
-	
+
 	# nonlinear stage
 	for i in range(n):
 		state1 = state[1]

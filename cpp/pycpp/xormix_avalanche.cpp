@@ -39,7 +39,7 @@ struct avalanche_wrapper {
 	typedef xormix<limb_t, N, L> xm;
 	typedef typename xm::word_t word_t;
 	typedef typename xm::matrix_t matrix_t;
-	
+
 	static word_t random_word(pcg32_random_t &rng) {
 		word_t res;
 		for(size_t i = 0; i < L; ++i) {
@@ -47,7 +47,7 @@ struct avalanche_wrapper {
 		}
 		return res;
 	}
-	
+
 	static size_t hamming_distance(word_t a, word_t b) {
 		size_t count = 0;
 		for(size_t i = 0; i < L; ++i) {
@@ -55,7 +55,7 @@ struct avalanche_wrapper {
 		}
 		return count;
 	}
-	
+
 	static void test(uint64_t *counts, uint64_t trials, uint32_t bit, const size_t *shifts, size_t rounds, uint64_t seed) {
 		pcg32_random_t rng;
 		rng.state = seed;
@@ -82,7 +82,7 @@ struct avalanche_wrapper {
 			++counts[hamming_distance(state1, state2)];
 		}
 	}
-	
+
 };
 
 typedef void (*avalanche_func_t)(uint64_t*, uint64_t, uint32_t, const size_t*, size_t, uint64_t);

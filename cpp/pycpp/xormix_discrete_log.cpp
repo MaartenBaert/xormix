@@ -17,7 +17,7 @@ struct discrete_log_wrapper {
 	typedef xormix<limb_t, N, L> xm;
 	typedef typename xm::word_t word_t;
 	typedef typename xm::matrix_t matrix_t;
-	
+
 	struct bsgs_entry_t {
 		uint64_t value, index;
 		inline bsgs_entry_t() {}
@@ -26,7 +26,7 @@ struct discrete_log_wrapper {
 			return value < other.value;
 		}
 	};
-	
+
 	static word_t int_to_word(uint64_t val) {
 		word_t res;
 		for(size_t ii = 0; ii < L; ++ii) {
@@ -34,7 +34,7 @@ struct discrete_log_wrapper {
 		}
 		return res;
 	}
-	
+
 	static word_t int_to_word(const pybind11::int_ &val) {
 		word_t res;
 		for(size_t ii = 0; ii < L; ++ii) {
@@ -42,7 +42,7 @@ struct discrete_log_wrapper {
 		}
 		return res;
 	}
-	
+
 	static matrix_t gf_to_matrix(word_t val, word_t poly) {
 		matrix_t res;
 		for(size_t ii = 0; ii < L; ++ii) {
@@ -62,7 +62,7 @@ struct discrete_log_wrapper {
 		}
 		return res;
 	}
-	
+
 	static matrix_t gf_to_matrix(const pybind11::int_ &val, const pybind11::int_ &poly) {
 		matrix_t res;
 		pybind11::int_ temp = val;
@@ -76,7 +76,7 @@ struct discrete_log_wrapper {
 		}
 		return res;
 	}
-	
+
 	static uint64_t isqrt(uint64_t x) {
 		uint64_t r = 0;
 		uint64_t b = uint64_t(1) << 62;
@@ -91,7 +91,7 @@ struct discrete_log_wrapper {
 		}
 		return r;
 	}
-	
+
 	static word_t gf_mul(word_t a, word_t b, word_t poly) {
 		limb_t r[2 * L] = {};
 		for(size_t ii = 0; ii < L; ++ii) {
@@ -120,7 +120,7 @@ struct discrete_log_wrapper {
 		}
 		return res;
 	}
-	
+
 	static pybind11::int_ gf_mul(const pybind11::int_ &a, const pybind11::int_ &b, const pybind11::int_ &poly) {
 		pybind11::int_ r = 0;
 		for(size_t i = 0; i < N * L; ++i) {
@@ -133,7 +133,7 @@ struct discrete_log_wrapper {
 		}
 		return r;
 	}
-	
+
 	static word_t gf_pow(word_t a, word_t k, word_t poly) {
 		word_t r = {};
 		r.l[0] = 1;
@@ -147,7 +147,7 @@ struct discrete_log_wrapper {
 		}
 		return r;
 	}
-	
+
 	static pybind11::int_ gf_pow(const pybind11::int_ &a, const pybind11::int_ &k, const pybind11::int_ &poly) {
 		pybind11::int_ r = 1, b = a;
 		for(size_t i = 0; i < N * L; ++i) {
@@ -157,7 +157,7 @@ struct discrete_log_wrapper {
 		}
 		return r;
 	}
-	
+
 	static uint64_t bsgs(const pybind11::int_ &val, const pybind11::int_ &gen, uint64_t order, const pybind11::int_ &poly) {
 		uint64_t steps = isqrt(order - 1) + 1;
 		pybind11::int_ gs = (pybind11::int_(1) << pybind11::int_(N * L)) - pybind11::int_(1) - pybind11::int_(steps);
@@ -200,7 +200,7 @@ struct discrete_log_wrapper {
 		}
 		throw std::runtime_error("BSGS failed");
 	}
-	
+
 };
 
 typedef pybind11::int_ (*gf_mul_func_t)(const pybind11::int_&, const pybind11::int_&, const pybind11::int_&);

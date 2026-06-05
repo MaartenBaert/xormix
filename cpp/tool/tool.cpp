@@ -89,11 +89,11 @@ struct xormix_tool {
 	typedef xormix<limb_t, N, L> xm;
 	typedef typename xm::word_t word_t;
 	typedef typename xm::matrix_t matrix_t;
-	
+
 	static char to_hex(uint8_t val) {
 		return (val < 10)? '0' + val : 'a' + (val - 10);
 	}
-	
+
 	static uint8_t from_hex(int c) {
 		if(c >= '0' && c <= '9')
 			return c - '0';
@@ -103,7 +103,7 @@ struct xormix_tool {
 			return c - 'A' + 10;
 		throw std::runtime_error("Invalid hex input value");
 	}
-	
+
 	static void read_skip_whitespace() {
 		for( ; ; ) {
 			int c = std::cin.peek();
@@ -112,7 +112,7 @@ struct xormix_tool {
 			std::cin.get();
 		}
 	}
-	
+
 	static bool read_check(const char *str, size_t n) {
 		for(size_t i = 0; i < n; ++i) {
 			if(std::cin.get() != int(str[i]))
@@ -120,7 +120,7 @@ struct xormix_tool {
 		}
 		return true;
 	}
-	
+
 	static void read_formatted(uint8_t *bytes, size_t num_words) {
 		switch(g_option_input_format) {
 			case FORMAT_BIN: {
@@ -173,7 +173,7 @@ struct xormix_tool {
 		if(std::cin.fail())
 			throw std::runtime_error("Reading input failed");
 	}
-	
+
 	static void write_formatted(uint8_t *bytes, size_t num_words) {
 		switch(g_option_output_format) {
 			case FORMAT_BIN: {
@@ -218,7 +218,7 @@ struct xormix_tool {
 		if(std::cout.fail())
 			throw std::runtime_error("Writing output failed");
 	}
-	
+
 	static void generate_seed_x(word_t *seed_x) {
 		word_t zero = {};
 		uint8_t random_bytes[xm::WORD_BYTES];
@@ -227,7 +227,7 @@ struct xormix_tool {
 			xm::unpack_words(random_bytes, seed_x, 1);
 		} while(xm::word_equal(*seed_x, zero));
 	}
-	
+
 	static void generate_seed_y(word_t *seed_y, size_t streams) {
 		std::vector<uint8_t> random_bytes(xm::WORD_BYTES * streams);
 		get_true_randomness(random_bytes.data(), random_bytes.size());
@@ -259,9 +259,9 @@ struct xormix_tool {
 			xm::seed_fast(state, g_option_streams, seed_x, seed_y[0], g_option_discard_cycles);
 		}
 	}
-	
+
 	static int run() {
-		
+
 		// allocate memory (and avoid integer overflow)
 		if(g_option_uniform_seeds > UINT32_MAX / (g_option_streams + 1))
 			throw std::bad_alloc();
@@ -270,9 +270,9 @@ struct xormix_tool {
 		std::vector<word_t> seed_x_values(g_option_uniform_seeds);
 		std::vector<word_t> seed_y_values(seed_y_words * g_option_uniform_seeds);
 		std::vector<uint8_t> bytes(xm::WORD_BYTES * (g_option_streams + 1));
-		
+
 		for(uint64_t repeat = 0; repeat < g_option_repeats || g_option_repeats == 0; ++repeat) {
-			
+
 			// read or generate raw seed inputs for all uniform instances
 			for(uint64_t uniform = 0; uniform < g_option_uniform_seeds; ++uniform) {
 				word_t *seed_y = seed_y_values.data() + uniform * seed_y_words;
@@ -286,7 +286,7 @@ struct xormix_tool {
 					std::cerr << "Warning: seed_x is zero" << std::endl;
 				}
 			}
-			
+
 			// generate or check uniform seeds
 			if(g_option_uniform_seeds != 1) {
 				word_t advance = xm::divide_period(g_option_uniform_seeds);
@@ -310,7 +310,7 @@ struct xormix_tool {
 				word_t *seed_y = seed_y_values.data() + uniform * seed_y_words;
 				apply_seed(substate, seed_x_values[uniform], seed_y);
 			}
-			
+
 			// write seed to stdout
 			if(g_option_write_seed) {
 				for(uint64_t uniform = 0; uniform < g_option_uniform_seeds; ++uniform) {
@@ -327,7 +327,7 @@ struct xormix_tool {
 						std::cout << std::endl;
 				}
 			}
-			
+
 			// write output to stdout
 			if(g_option_write_output) {
 				if(g_option_output_format != FORMAT_BIN)
@@ -343,19 +343,19 @@ struct xormix_tool {
 				if(g_option_output_format != FORMAT_BIN)
 					std::cout << std::endl;
 			}
-			
+
 		}
-		
+
 		return EXIT_SUCCESS;
 	}
-	
+
 };
 
 int main(int argc, char **argv) {
 	try {
-		
+
 		std::ios_base::sync_with_stdio(false);
-		
+
 		cxxopts::Options options("xormix-tool", "Command-line utility for the xormix random number generator");
 		options.add_options()
 			("h,help"          , "Show this help message",
@@ -388,7 +388,7 @@ int main(int argc, char **argv) {
 				cxxopts::value(g_option_output_format)->default_value("hex"))
 		;
 		options.parse(argc, argv);
-		
+
 		if(!g_option_help && !g_option_version && !g_option_write_seed && !g_option_write_output) {
 			std::cerr << "Error: No action specified (-e or -o is required)" << std::endl;
 			std::cerr << options.help() << std::endl;
@@ -416,7 +416,7 @@ int main(int argc, char **argv) {
 				case SEED_METHOD_FAST: g_option_discard_cycles = 1; break;
 			}
 		}
-		
+
 		std::map<uint32_t, int(*)()> word_size_mapper = {
 			{ 16, xormix_tool<uint16_t, 16, 1>::run},
 			{ 24, xormix_tool<uint32_t, 24, 1>::run},
@@ -426,7 +426,7 @@ int main(int argc, char **argv) {
 			{ 96, xormix_tool<uint64_t, 48, 2>::run},
 			{128, xormix_tool<uint64_t, 64, 2>::run},
 		};
-		
+
 		auto tool_run = word_size_mapper.find(g_option_word_size);
 		if(tool_run == word_size_mapper.end()) {
 			std::cerr << "Error: Word size must be 16, 24, 32, 48, 64, 96 or 128" << std::endl;
@@ -442,7 +442,7 @@ int main(int argc, char **argv) {
 			return EXIT_FAILURE;
 		}
 		return tool_run->second();
-		
+
 	} catch(const std::exception &e) {
 		std::cerr << "Error: " << e.what() << std::endl;
 		return EXIT_FAILURE;
