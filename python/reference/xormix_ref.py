@@ -38,3 +38,50 @@ def next_state(matrix, salts, shuffle, shifts, state):
 			s4 = mixup >> shifts[3]
 			temp = (s0 ^ (s1 & ~s2) ^ s3 ^ s4 ^ (mixin[s] >> i)) & 1
 			state[s + 1] = (temp << (n - 1)) | (state[s + 1] >> 1)
+
+def seed_full(salts, seed_x, seed_y, streams):
+	n = len(salts)
+	assert 1 <= streams <= n
+	mask = (1 << n) - 1
+	state = [seed_x & mask]
+	assert state[0] != 0
+	for s in range(streams):
+		state.append((seed_y >> (s * n)) & mask)
+	return state
+
+def seed_simple(matrix, salts, shuffle, shifts, seed_x, seed_y, streams, discard = 4):
+	n = len(matrix)
+	assert len(salts) == n
+	assert len(shuffle) == n
+	assert len(shifts) == 4
+	assert 1 <= streams <= n
+	assert discard >= 0
+	mask = (1 << n) - 1
+	state = [seed_x & mask] + [seed_y & mask for s in range(streams)]
+	assert state[0] != 0
+	for i in range(discard):
+		next_state(matrix, salts, shuffle, shifts, state)
+	return state
+
+def seed_fast(matrix, salts, shuffle, shifts, salts_fs, shuffle_fs, seed_x, seed_y, streams, discard = 1):
+	n = len(matrix)
+	assert len(salts) == n
+	assert len(shuffle) == n
+	assert len(shifts) == 4
+	assert len(salts_fs) == n
+	assert len(shuffle_fs) == n
+	assert 1 <= streams <= n
+	assert discard >= 0
+	mask = (1 << n) - 1
+	state = [seed_x & mask]
+	assert state[0] != 0
+	for s in range(streams):
+		salted = (seed_y ^ salts_fs[s]) & mask
+		shuffled = 0
+		for i in range(n):
+			j = (s + shuffle_fs[i]) % n
+			shuffled |= ((salted >> j) & 1) << i
+		state.append(shuffled)
+	for i in range(discard):
+		next_state(matrix, salts, shuffle, shifts, state)
+	return state

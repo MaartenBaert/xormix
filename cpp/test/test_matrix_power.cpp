@@ -378,6 +378,8 @@ static const xormix128::matrix_t matrix_power_output128 = {
 	UINT64_C(0x33dcbff5103fcede), UINT64_C(0xdb264a68ca48d968), UINT64_C(0x121bc6dcb0a16274), UINT64_C(0xf5307bc07999c9f8),
 };
 
+// End of test vectors.
+
 #define XORMIX_MATRIX_POWER(n) \
 TEST_CASE("xormix"#n" matrix power", "[xormix"#n"][matrixpower]") { \
 	typedef xormix##n xm; \

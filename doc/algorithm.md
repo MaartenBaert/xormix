@@ -21,7 +21,7 @@ The single-stream version of the algorithm produces N output bits per cycle. It 
 First stage
 -----------
 
-The first stage is fully linear and has N state bits. It is conceptually similar to a plain [xorshift](https://en.wikipedia.org/wiki/Xorshift) generator, however instead of using only simple bit shift operations, it combines bits in a more arbitrary way. This is possible at no extra cost because bit shuffling is essentially free in hardware. The update function is specifically chosen to have a period of `2**N - 1`, just like a xorshift generator. The exact definition of the X update function depends on `N`. As an example, the X update function for xormix16 is as follows:
+The first stage is fully linear and has N state bits. It is conceptually similar to a plain [xorshift](https://en.wikipedia.org/wiki/Xorshift) generator, however instead of using only simple bit shift operations, it combines bits in a more arbitrary way. This is possible at no extra cost because bit shuffling is essentially free in hardware. The update function is specifically chosen to have a period of `2^N - 1`, just like a xorshift generator. The exact definition of the X update function depends on `N`. As an example, the X update function for xormix16 is as follows:
 
 	X'[ 0] = X[ 3] xor X[11] xor X[ 1] xor X[ 4] xor X[13]
 	X'[ 1] = X[11] xor X[12] xor X[10] xor X[ 2] xor X[ 8] xor X[ 9]
@@ -104,10 +104,30 @@ Sometimes it is more convenient to seed the entire PRNG with a smaller seed. For
 	} while(X == 0);
 	Y[0] = random();
 	for(i = 1; i < S; ++i) {
-		Y[i] = Y[0]
+		Y[i] = Y[0];
 	}
 	
 	// discard the first 4 cycles worth of output
 	for(i = 0; i < 4; ++i) {
 		next_state();
 	}
+
+### Fast seeding procedure
+
+In applications that require fast reseeding, but still want the convenience of a smaller seed, the fast seeding procedure offers a compromise that provides both of these properties, at the expense of a small reduction in output randomness quality in the first few cycles. The fast seeding procedure reduces startup time to 1 cycle, and can be performed in hardware with zero downtime by introducing the new seed values right before the next-state logic. It is described by the following algorithm:
+
+	// initialize the PRNG
+	do {
+		X = random();
+	} while(X == 0);
+	seed_y = random();
+	for(i = 0; i < S; ++i) {
+		for(j = 0; j < N; ++j) {
+			Y[i][j] = (seed_y xor salts_fs[i])[(i + shuffle_fs[j]) % N]
+		}
+	}
+	
+	// discard the first cycle worth of output
+	next_state();
+
+The `salts_fs` and `shuffle_fs` constants are generated similarly to those used in the `mixin` step, but have different values.

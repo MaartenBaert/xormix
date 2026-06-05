@@ -123,6 +123,8 @@ static const xormix128::word_t divide_period_output128[TEST_DIVISIONS] = {
 	UINT64_C(0xb0c59f5bbb1e83ab), UINT64_C(0x0000000dc713d04e), UINT64_C(0x468cb364edea6132), UINT64_C(0x0000000264159d87),
 };
 
+// End of test vectors.
+
 #define XORMIX_DIVIDE_PERIOD(n) \
 TEST_CASE("xormix"#n" divide period", "[xormix"#n"][divideperiod]") { \
 	typedef xormix##n xm; \

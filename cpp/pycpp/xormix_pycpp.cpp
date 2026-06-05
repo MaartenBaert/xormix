@@ -125,21 +125,26 @@ public: // Python API
 	void seed_full(const py::int_ &seed_x, const py::int_ &seed_y) {
 		if(seed_x.equal(pybind11::int_(0)))
 			py_warning("Xormix seed_x is zero");
-		m_state[0] = pyint_to_word(seed_x);
-		pyint_to_words(seed_y, m_state.data() + 1, m_state.size() - 1);
+		word_t seed_x_word = pyint_to_word(seed_x);
+		std::vector<word_t> seed_y_words(get_streams());
+		pyint_to_words(seed_y, seed_y_words.data(), seed_y_words.size());
+		xm::seed_full(m_state.data(), get_streams(), seed_x_word, seed_y_words.data());
 	}
 	
 	void seed_simple(const py::int_ &seed_x, const py::int_ &seed_y) {
 		if(seed_x.equal(pybind11::int_(0)))
 			py_warning("Xormix seed_x is zero");
-		m_state[0] = pyint_to_word(seed_x);
-		m_state[1] = pyint_to_word(seed_y);
-		for(size_t s = 1; s < get_streams(); ++s) {
-			m_state[s + 1] = m_state[1];
-		}
-		for(size_t i = 0; i < 4; ++i) {
-			xm::next(m_state.data(), get_streams());
-		}
+		word_t seed_x_word = pyint_to_word(seed_x);
+		word_t seed_y_word = pyint_to_word(seed_y);
+		xm::seed_simple(m_state.data(), get_streams(), seed_x_word, seed_y_word);
+	}
+	
+	void seed_fast(const py::int_ &seed_x, const py::int_ &seed_y) {
+		if(seed_x.equal(pybind11::int_(0)))
+			py_warning("Xormix seed_x is zero");
+		word_t seed_x_word = pyint_to_word(seed_x);
+		word_t seed_y_word = pyint_to_word(seed_y);
+		xm::seed_fast(m_state.data(), get_streams(), seed_x_word, seed_y_word);
 	}
 	
 	void forward(size_t cycles) {
@@ -404,6 +409,8 @@ public: // Python API
 			.def("seed_full", &xormix_pycpp::seed_full, "Seeds the PRNG using the full seeding procedure.",
 				py::arg("seed_x"), py::arg("seed_y"))
 			.def("seed_simple", &xormix_pycpp::seed_simple, "Seeds the PRNG using the simplified seeding procedure.",
+				py::arg("seed_x"), py::arg("seed_y"))
+			.def("seed_fast", &xormix_pycpp::seed_fast, "Seeds the PRNG using the fast seeding procedure.",
 				py::arg("seed_x"), py::arg("seed_y"))
 			.def("forward", &xormix_pycpp::forward, "Forwards the PRNG by the given number of cycles.",
 				py::arg("cycles"))

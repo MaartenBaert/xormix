@@ -96,6 +96,10 @@ Seeds the PRNG using the full seeding procedure. `seed_x` should contain *N* bit
 
 Seeds the PRNG using the simplified seeding procedure. Both `seed_x` and `seed_y` should contain *N* bits.
 
+### xormix*N*.seed_fast(seed_x : int, seed_y : int)
+
+Seeds the PRNG using the fast seeding procedure. Both `seed_x` and `seed_y` should contain *N* bits.
+
 ### xormix*N*.forward(cycles : int)
 
 Forwards the PRNG by the given number of cycles.

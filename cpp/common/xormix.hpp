@@ -49,6 +49,8 @@ struct xormix {
 	static const word_t XORMIX_SALTS[N * L];
 	static const size_t XORMIX_SHUFFLE[N * L];
 	static const size_t XORMIX_SHIFTS[4];
+	static const word_t XORMIX_SALTS_FS[N * L];
+	static const size_t XORMIX_SHUFFLE_FS[N * L];
 	
 	static bool word_equal(word_t a, word_t b) {
 		for(size_t ii = 0; ii < L; ++ii) {
@@ -246,6 +248,36 @@ struct xormix {
 			res[7].l[ii] = (tmp[7] & limb_t(UINT64_C(0xaaaaaaaaaaaaaaaa))) | ((tmp[6] & limb_t(UINT64_C(0xaaaaaaaaaaaaaaaa))) >> 1);
 		}
 	}
+
+	static void shuffle_words(word_t *output, size_t streams, word_t input, const size_t *shuffle, const word_t *salts) {
+		size_t s = 0;
+		for( ; s < streams / 8 * 8; s += 8) {
+			word_t tmp[8];
+			shuffle_word8(tmp, input, shuffle);
+			output[s + 0] = xor_word(tmp[0], salts[s + 0]);
+			output[s + 1] = xor_word(tmp[1], salts[s + 1]);
+			output[s + 2] = xor_word(tmp[2], salts[s + 2]);
+			output[s + 3] = xor_word(tmp[3], salts[s + 3]);
+			output[s + 4] = xor_word(tmp[4], salts[s + 4]);
+			output[s + 5] = xor_word(tmp[5], salts[s + 5]);
+			output[s + 6] = xor_word(tmp[6], salts[s + 6]);
+			output[s + 7] = xor_word(tmp[7], salts[s + 7]);
+			input = right_rotate_word(input, 8);
+		}
+		for( ; s < streams / 4 * 4; s += 4) {
+			word_t tmp[4];
+			shuffle_word4(tmp, input, shuffle);
+			output[s + 0] = xor_word(tmp[0], salts[s + 0]);
+			output[s + 1] = xor_word(tmp[1], salts[s + 1]);
+			output[s + 2] = xor_word(tmp[2], salts[s + 2]);
+			output[s + 3] = xor_word(tmp[3], salts[s + 3]);
+			input = right_rotate_word(input, 4);
+		}
+		for( ; s < streams; ++s) {
+			output[s] = xor_word(shuffle_word(input, shuffle), salts[s]);
+			input = right_rotate_word(input, 1);
+		}
+	}
 	
 	static void mix_halfword(word_t &state, word_t &mixin, word_t mixup, const size_t *shifts) {
 		if(L == 1) {
@@ -301,73 +333,21 @@ struct xormix {
 		word_t state0 = state[0];
 		state[0] = matrix_vector_product(XORMIX_MATRIX, state0);
 		word_t mixin[N * L];
-		size_t s = 0;
-		for( ; s < (streams + 2) / 8 * 8; s += 8) {
-			word_t tmp[8];
-			shuffle_word8(tmp, state0, XORMIX_SHUFFLE);
-			mixin[s + 0] = xor_word(tmp[0], XORMIX_SALTS[s + 0]);
-			mixin[s + 1] = xor_word(tmp[1], XORMIX_SALTS[s + 1]);
-			mixin[s + 2] = xor_word(tmp[2], XORMIX_SALTS[s + 2]);
-			mixin[s + 3] = xor_word(tmp[3], XORMIX_SALTS[s + 3]);
-			mixin[s + 4] = xor_word(tmp[4], XORMIX_SALTS[s + 4]);
-			mixin[s + 5] = xor_word(tmp[5], XORMIX_SALTS[s + 5]);
-			mixin[s + 6] = xor_word(tmp[6], XORMIX_SALTS[s + 6]);
-			mixin[s + 7] = xor_word(tmp[7], XORMIX_SALTS[s + 7]);
-			state0 = right_rotate_word(state0, 8);
-		}
-		for( ; s < (streams + 1) / 4 * 4; s += 4) {
-			word_t tmp[4];
-			shuffle_word4(tmp, state0, XORMIX_SHUFFLE);
-			mixin[s + 0] = xor_word(tmp[0], XORMIX_SALTS[s + 0]);
-			mixin[s + 1] = xor_word(tmp[1], XORMIX_SALTS[s + 1]);
-			mixin[s + 2] = xor_word(tmp[2], XORMIX_SALTS[s + 2]);
-			mixin[s + 3] = xor_word(tmp[3], XORMIX_SALTS[s + 3]);
-			state0 = right_rotate_word(state0, 4);
-		}
-		for( ; s < streams; ++s) {
-			mixin[s] = xor_word(shuffle_word(state0, XORMIX_SHUFFLE), XORMIX_SALTS[s]);
-			state0 = right_rotate_word(state0, 1);
-		}
+		shuffle_words(mixin, streams, state0, XORMIX_SHUFFLE, XORMIX_SALTS);
 		for(size_t h = 0; h < 2; ++h) {
 			word_t state1 = state[1];
-			for(s = 0; s < streams; ++s) {
+			for(size_t s = 0; s < streams; ++s) {
 				word_t mixup = (s == streams - 1)? state1 : state[s + 2];
 				mix_halfword(state[s + 1], mixin[s], mixup, XORMIX_SHIFTS);
 			}
 		}
 	}
-	
+
 	static void prev(word_t *state, size_t streams) {
 		state[0] = matrix_vector_product(XORMIX_MATRIX_INV, state[0]);
 		word_t state0 = state[0];
 		word_t mixin[N * L];
-		size_t s = 0;
-		for( ; s < (streams + 2) / 8 * 8; s += 8) {
-			word_t tmp[8];
-			shuffle_word8(tmp, state0, XORMIX_SHUFFLE);
-			mixin[s + 0] = xor_word(tmp[0], XORMIX_SALTS[s + 0]);
-			mixin[s + 1] = xor_word(tmp[1], XORMIX_SALTS[s + 1]);
-			mixin[s + 2] = xor_word(tmp[2], XORMIX_SALTS[s + 2]);
-			mixin[s + 3] = xor_word(tmp[3], XORMIX_SALTS[s + 3]);
-			mixin[s + 4] = xor_word(tmp[4], XORMIX_SALTS[s + 4]);
-			mixin[s + 5] = xor_word(tmp[5], XORMIX_SALTS[s + 5]);
-			mixin[s + 6] = xor_word(tmp[6], XORMIX_SALTS[s + 6]);
-			mixin[s + 7] = xor_word(tmp[7], XORMIX_SALTS[s + 7]);
-			state0 = right_rotate_word(state0, 8);
-		}
-		for( ; s < (streams + 1) / 4 * 4; s += 4) {
-			word_t tmp[4];
-			shuffle_word4(tmp, state0, XORMIX_SHUFFLE);
-			mixin[s + 0] = xor_word(tmp[0], XORMIX_SALTS[s + 0]);
-			mixin[s + 1] = xor_word(tmp[1], XORMIX_SALTS[s + 1]);
-			mixin[s + 2] = xor_word(tmp[2], XORMIX_SALTS[s + 2]);
-			mixin[s + 3] = xor_word(tmp[3], XORMIX_SALTS[s + 3]);
-			state0 = right_rotate_word(state0, 4);
-		}
-		for( ; s < streams; ++s) {
-			mixin[s] = xor_word(shuffle_word(state0, XORMIX_SHUFFLE), XORMIX_SALTS[s]);
-			state0 = right_rotate_word(state0, 1);
-		}
+		shuffle_words(mixin, streams, state0, XORMIX_SHUFFLE, XORMIX_SALTS);
 		size_t minshift = std::min(
 			std::min(XORMIX_SHIFTS[0], XORMIX_SHIFTS[1]),
 			std::min(XORMIX_SHIFTS[2], XORMIX_SHIFTS[3]));
@@ -375,11 +355,39 @@ struct xormix {
 		for(size_t h = 0; h < nparts; ++h) {
 			size_t nbits = (h == nparts - 1)? N * L - (nparts - 1) * minshift : minshift;
 			word_t statelast = state[streams];
-			for(s = streams; s-- > 0; ) {
+			for(size_t s = streams; s-- > 0; ) {
 				word_t mixup = (s == 0)? statelast : state[s];
 				word_t &mixin2 = (s == 0)? mixin[streams - 1] : mixin[s - 1];
 				unmix_partword(state[s + 1], mixin2, mixup, XORMIX_SHIFTS, nbits);
 			}
+		}
+	}
+
+	static void seed_full(word_t *state, size_t streams, word_t seed_x, const word_t *seed_y, size_t discard = 0) {
+		state[0] = seed_x;
+		for(size_t s = 0; s < streams; ++s) {
+			state[s + 1] = seed_y[s];
+		}
+		for(size_t i = 0; i < discard; ++i) {
+			next(state, streams);
+		}
+	}
+
+	static void seed_simple(word_t *state, size_t streams, word_t seed_x, word_t seed_y, size_t discard = 4) {
+		state[0] = seed_x;
+		for(size_t s = 0; s < streams; ++s) {
+			state[s + 1] = seed_y;
+		}
+		for(size_t i = 0; i < discard; ++i) {
+			next(state, streams);
+		}
+	}
+
+	static void seed_fast(word_t *state, size_t streams, word_t seed_x, word_t seed_y, size_t discard = 1) {
+		state[0] = seed_x;
+		shuffle_words(state + 1, streams, seed_y, XORMIX_SHUFFLE_FS, XORMIX_SALTS_FS);
+		for(size_t i = 0; i < discard; ++i) {
+			next(state, streams);
 		}
 	}
 	

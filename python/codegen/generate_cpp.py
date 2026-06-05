@@ -109,6 +109,22 @@ def generate_xormix(filename):
 			f.write(f'\n')
 			f.write(f'template<>\n')
 			f.write(f'const size_t xormix{n}::XORMIX_SHIFTS[4] = {shifts};\n')
+		for n in modules:
+			shuffled_salts = []
+			for s in range(n):
+				salt = modules[n].salts_fs[s]
+				shuffled = 0
+				for i in range(n):
+					j = (s + modules[n].shuffle_fs[i]) % n
+					shuffled |= ((salt >> j) & 1) << i
+				shuffled_salts.append(shuffled)
+			f.write(f'\n')
+			f.write(f'template<>\n')
+			write_array(f, f'const xormix{n}::word_t xormix{n}::XORMIX_SALTS_FS[{n}]', n, shuffled_salts, 4)
+		for n in modules:
+			f.write(f'\n')
+			f.write(f'template<>\n')
+			write_array_dec(f, f'const size_t xormix{n}::XORMIX_SHUFFLE_FS[{n}]', n, modules[n].shuffle_fs, 16)
 		f.write(f'\n')
 		f.write(f'template class xormix<uint16_t, 16, 1>;\n');
 		f.write(f'template class xormix<uint32_t, 24, 1>;\n');

@@ -180,3 +180,12 @@ shuffle_fs = [
 
 def next_state(state):
 	return xormix_ref.next_state(matrix, salts, shuffle, shifts, state)
+
+def seed_full(seed_x, seed_y, streams):
+	return xormix_ref.seed_full(salts, seed_x, seed_y, streams)
+
+def seed_simple(seed_x, seed_y, streams, discard = 4):
+	return xormix_ref.seed_simple(matrix, salts, shuffle, shifts, seed_x, seed_y, streams, discard)
+
+def seed_fast(seed_x, seed_y, streams, discard = 1):
+	return xormix_ref.seed_fast(matrix, salts, shuffle, shifts, salts_fs, shuffle_fs, seed_x, seed_y, streams, discard)

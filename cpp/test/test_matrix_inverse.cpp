@@ -7,7 +7,6 @@
 #define XORMIX_MATRIX_INVERSE(n) \
 TEST_CASE("xormix"#n" matrix inverse", "[xormix"#n"][matrixinverse]") { \
 	typedef xormix##n xm; \
-	xm::matrix_t identity = xm::matrix_identity(); \
 	xm::word_t full_period_minus_one; \
 	for(size_t k = 0; k < xm::L_; ++k) { \
 		full_period_minus_one.l[k] = xm::MASK; \

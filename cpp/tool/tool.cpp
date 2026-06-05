@@ -20,6 +20,12 @@ enum format_t {
 	FORMAT_VERILOG,
 };
 
+enum seed_method_t {
+	SEED_METHOD_FULL,
+	SEED_METHOD_SIMPLE,
+	SEED_METHOD_FAST,
+};
+
 bool g_option_help;
 bool g_option_version;
 bool g_option_read_seed;
@@ -31,8 +37,8 @@ uint32_t g_option_streams;
 uint32_t g_option_uniform_seeds;
 uint64_t g_option_output_cycles;
 
-bool g_option_simple_seed;
-uint64_t g_option_discard_cycles;
+seed_method_t g_option_seed_method;
+int64_t g_option_discard_cycles;
 uint64_t g_option_repeats;
 
 format_t g_option_input_format;
@@ -55,6 +61,25 @@ std::ostream& operator<<(std::ostream &stream, format_t value) {
 		case FORMAT_HEX: { stream << "hex"; break; }
 		case FORMAT_VHDL: { stream << "vhdl"; break; }
 		case FORMAT_VERILOG: { stream << "verilog"; break; }
+	}
+	return stream;
+}
+
+std::istream& operator>>(std::istream &stream, seed_method_t &value) {
+	std::string str;
+	stream >> str;
+	if(str == "full") value = SEED_METHOD_FULL;
+	else if(str == "simple") value = SEED_METHOD_SIMPLE;
+	else if(str == "fast") value = SEED_METHOD_FAST;
+	else throw std::runtime_error("Seeding method must be full, simple or fast");
+	return stream;
+}
+
+std::ostream& operator<<(std::ostream &stream, seed_method_t value) {
+	switch(value) {
+		case SEED_METHOD_FULL: { stream << "full"; break; }
+		case SEED_METHOD_SIMPLE: { stream << "simple"; break; }
+		case SEED_METHOD_FAST: { stream << "fast"; break; }
 	}
 	return stream;
 }
@@ -208,95 +233,96 @@ struct xormix_tool {
 		get_true_randomness(random_bytes.data(), random_bytes.size());
 		xm::unpack_words(random_bytes.data(), seed_y, streams);
 	}
+
+	static size_t get_seed_y_words() {
+		return (g_option_seed_method == SEED_METHOD_FULL)? g_option_streams : 1;
+	}
+
+	static void read_seed_input(uint8_t *bytes, word_t *seed_x, word_t *seed_y) {
+		read_formatted(bytes, 1);
+		xm::unpack_words(bytes, seed_x, 1);
+		read_formatted(bytes + xm::WORD_BYTES, get_seed_y_words());
+		xm::unpack_words(bytes + xm::WORD_BYTES, seed_y, get_seed_y_words());
+	}
+
+	static void generate_seed_input(word_t *seed_x, word_t *seed_y) {
+		generate_seed_x(seed_x);
+		generate_seed_y(seed_y, get_seed_y_words());
+	}
+
+	static void apply_seed(word_t *state, word_t seed_x, const word_t *seed_y) {
+		if(g_option_seed_method == SEED_METHOD_FULL) {
+			xm::seed_full(state, g_option_streams, seed_x, seed_y, g_option_discard_cycles);
+		} else if(g_option_seed_method == SEED_METHOD_SIMPLE) {
+			xm::seed_simple(state, g_option_streams, seed_x, seed_y[0], g_option_discard_cycles);
+		} else {
+			xm::seed_fast(state, g_option_streams, seed_x, seed_y[0], g_option_discard_cycles);
+		}
+	}
 	
 	static int run() {
 		
 		// allocate memory (and avoid integer overflow)
 		if(g_option_uniform_seeds > UINT32_MAX / (g_option_streams + 1))
 			throw std::bad_alloc();
+		size_t seed_y_words = get_seed_y_words();
 		std::vector<word_t> state((g_option_streams + 1) * g_option_uniform_seeds);
+		std::vector<word_t> seed_x_values(g_option_uniform_seeds);
+		std::vector<word_t> seed_y_values(seed_y_words * g_option_uniform_seeds);
 		std::vector<uint8_t> bytes(xm::WORD_BYTES * (g_option_streams + 1));
-		
-		std::vector<word_t> output(g_option_streams);
 		
 		for(uint64_t repeat = 0; repeat < g_option_repeats || g_option_repeats == 0; ++repeat) {
 			
-			// generate initial state
-			if(g_option_read_seed) {
-				
-				// read seeds from stdin (including all uniform seeds)
-				for(uint64_t uniform = 0; uniform < g_option_uniform_seeds; ++uniform) {
-					word_t *substate = state.data() + uniform * (g_option_streams + 1);
-					read_formatted(bytes.data(), 1);
-					xm::unpack_words(bytes.data(), substate, 1);
-					if(g_option_simple_seed) {
-						read_formatted(bytes.data() + xm::WORD_BYTES, 1);
-						xm::unpack_words(bytes.data() + xm::WORD_BYTES, substate + 1, 1);
-						for(size_t s = 1; s < g_option_streams; ++s) {
-							substate[s + 1] = substate[1];
-						}
-					} else {
-						read_formatted(bytes.data() + xm::WORD_BYTES, g_option_streams);
-						xm::unpack_words(bytes.data() + xm::WORD_BYTES, substate + 1, g_option_streams);
-					}
-					word_t zero = {};
-					if(xm::word_equal(state[0], zero)) {
-						std::cerr << "Warning: seed_x is zero" << std::endl;
-					}
-				}
-				
-			} else {
-				
-				// get original seed
-				generate_seed_x(state.data());
-				if(g_option_simple_seed) {
-					generate_seed_y(state.data() + 1, 1);
-					for(size_t s = 1; s < g_option_streams; ++s) {
-						state[s + 1] = state[1];
-					}
+			// read or generate raw seed inputs for all uniform instances
+			for(uint64_t uniform = 0; uniform < g_option_uniform_seeds; ++uniform) {
+				word_t *seed_y = seed_y_values.data() + uniform * seed_y_words;
+				if(g_option_read_seed) {
+					read_seed_input(bytes.data(), &seed_x_values[uniform], seed_y);
 				} else {
-					generate_seed_y(state.data() + 1, g_option_streams);
+					generate_seed_input(&seed_x_values[uniform], seed_y);
 				}
-				
+				word_t zero = {};
+				if(xm::word_equal(seed_x_values[uniform], zero)) {
+					std::cerr << "Warning: seed_x is zero" << std::endl;
+				}
 			}
 			
 			// generate or check uniform seeds
 			if(g_option_uniform_seeds != 1) {
 				word_t advance = xm::divide_period(g_option_uniform_seeds);
 				matrix_t advance_matrix = xm::matrix_power(xm::XORMIX_MATRIX, advance);
-				word_t seed_x = state[0];
+				word_t seed_x = seed_x_values[0];
 				for(uint64_t uniform = 1; uniform < g_option_uniform_seeds; ++uniform) {
 					seed_x = xm::matrix_vector_product(advance_matrix, seed_x);
-					word_t *substate = state.data() + uniform * (g_option_streams + 1);
 					if(g_option_read_seed) {
-						if(!xm::word_equal(seed_x, substate[0])) {
+						if(!xm::word_equal(seed_x, seed_x_values[uniform])) {
 							std::cerr << "Warning: seeds are not uniformly spaced" << std::endl;
 						}
 					} else {
-						substate[0] = seed_x;
-						if(g_option_simple_seed) {
-							generate_seed_y(substate + 1, 1);
-							for(size_t s = 1; s < g_option_streams; ++s) {
-								substate[s + 1] = substate[1];
-							}
-						} else {
-							generate_seed_y(substate + 1, g_option_streams);
-						}
+						seed_x_values[uniform] = seed_x;
 					}
 				}
+			}
+
+			// generate initial state
+			for(uint64_t uniform = 0; uniform < g_option_uniform_seeds; ++uniform) {
+				word_t *substate = state.data() + uniform * (g_option_streams + 1);
+				word_t *seed_y = seed_y_values.data() + uniform * seed_y_words;
+				apply_seed(substate, seed_x_values[uniform], seed_y);
 			}
 			
 			// write seed to stdout
 			if(g_option_write_seed) {
 				for(uint64_t uniform = 0; uniform < g_option_uniform_seeds; ++uniform) {
-					word_t *substate = state.data() + uniform * (g_option_streams + 1);
-					xm::pack_words(bytes.data(), substate, g_option_streams + 1);
+					word_t *seed_y = seed_y_values.data() + uniform * seed_y_words;
+					xm::pack_words(bytes.data(), &seed_x_values[uniform], 1);
+					xm::pack_words(bytes.data() + xm::WORD_BYTES, seed_y, seed_y_words);
 					if(g_option_output_format != FORMAT_BIN)
 						std::cout << "seed_x:" << std::endl;
 					write_formatted(bytes.data(), 1);
 					if(g_option_output_format != FORMAT_BIN)
 						std::cout << "seed_y:" << std::endl;
-					write_formatted(bytes.data() + xm::WORD_BYTES, (g_option_simple_seed)? 1 : g_option_streams);
+					write_formatted(bytes.data() + xm::WORD_BYTES, seed_y_words);
 					if(g_option_output_format != FORMAT_BIN)
 						std::cout << std::endl;
 				}
@@ -306,12 +332,6 @@ struct xormix_tool {
 			if(g_option_write_output) {
 				if(g_option_output_format != FORMAT_BIN)
 					std::cout << "output:" << std::endl;
-				for(uint64_t cycle = 0; cycle < g_option_discard_cycles; ++cycle) {
-					for(uint64_t uniform = 0; uniform < g_option_uniform_seeds; ++uniform) {
-						word_t *substate = state.data() + uniform * (g_option_streams + 1);
-						xm::next(substate, g_option_streams);
-					}
-				}
 				for(uint64_t cycle = 0; cycle < g_option_output_cycles || g_option_output_cycles == 0; ++cycle) {
 					for(uint64_t uniform = 0; uniform < g_option_uniform_seeds; ++uniform) {
 						word_t *substate = state.data() + uniform * (g_option_streams + 1);
@@ -356,10 +376,10 @@ int main(int argc, char **argv) {
 				cxxopts::value(g_option_uniform_seeds)->default_value("1"))
 			("c,output-cycles" , "Number of output cycles [0 means infinite]",
 				cxxopts::value(g_option_output_cycles)->default_value("0"))
-			("t,simple-seed"   , "Use simplified seeding procedure with short seeds",
-				cxxopts::value(g_option_simple_seed))
-			("d,discard-cycles", "Number of cycles to discard after seeding, typically used with short seeds",
-				cxxopts::value(g_option_discard_cycles)->default_value("0"))
+			("m,seed-method"   , "Seeding method [full, simple, fast]",
+				cxxopts::value(g_option_seed_method)->default_value("full"))
+			("d,discard-cycles", "Number of cycles to discard after seeding [-1 means default for the chosen seeding method]",
+				cxxopts::value(g_option_discard_cycles)->default_value("-1"))
 			("p,repeats"       , "Number of times to repeat the whole command, useful for repeated reseeding [0 means infinite]",
 				cxxopts::value(g_option_repeats)->default_value("1"))
 			("i,input-format"  , "Input format [bin, hex, vhdl or verilog]",
@@ -388,6 +408,13 @@ int main(int argc, char **argv) {
 			std::cout << "  xormix96: " << xormix96::REVISION << std::endl;
 			std::cout << "  xormix128: " << xormix128::REVISION << std::endl;
 			return EXIT_SUCCESS;
+		}
+		if(g_option_discard_cycles < 0) {
+			switch(g_option_seed_method) {
+				case SEED_METHOD_FULL: g_option_discard_cycles = 0; break;
+				case SEED_METHOD_SIMPLE: g_option_discard_cycles = 4; break;
+				case SEED_METHOD_FAST: g_option_discard_cycles = 1; break;
+			}
 		}
 		
 		std::map<uint32_t, int(*)()> word_size_mapper = {
