@@ -251,12 +251,19 @@ struct xormix_tool {
 	}
 
 	static void apply_seed(word_t *state, word_t seed_x, const word_t *seed_y) {
-		if(g_option_seed_method == SEED_METHOD_FULL) {
-			xm::seed_full(state, g_option_streams, seed_x, seed_y, g_option_discard_cycles);
-		} else if(g_option_seed_method == SEED_METHOD_SIMPLE) {
-			xm::seed_simple(state, g_option_streams, seed_x, seed_y[0], g_option_discard_cycles);
-		} else {
-			xm::seed_fast(state, g_option_streams, seed_x, seed_y[0], g_option_discard_cycles);
+		switch(g_option_seed_method) {
+			case SEED_METHOD_FULL: {
+				xm::seed_full(state, g_option_streams, seed_x, seed_y, g_option_discard_cycles);
+				break;
+			}
+			case SEED_METHOD_SIMPLE: {
+				xm::seed_simple(state, g_option_streams, seed_x, seed_y[0], g_option_discard_cycles);
+				break;
+			}
+			case SEED_METHOD_FAST: {
+				xm::seed_fast(state, g_option_streams, seed_x, seed_y[0], g_option_discard_cycles);
+				break;
+			}
 		}
 	}
 
